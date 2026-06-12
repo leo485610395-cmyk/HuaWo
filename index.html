@@ -1,0 +1,1622 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>化我 — AI 智能体探索者 & 破界青年</title>
+    
+    <!-- Tailwind CSS 核心 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#F5F4F0',      /* 顶级暖沙色背景 */
+                            dark: '#0E0E0E',    /* 深邃碳黑 */
+                            gray: '#7A7A77',    /* 哑光暖灰 */
+                            accent: '#C5A880',  /* 精致香槟金 */
+                            footerBg: '#161616' /* 奢华富黑页脚背景 */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        display: ['Syne', 'Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Bodoni Moda', 'Playfair Display', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 谷歌高端艺术字体库 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700&family=Syne:wght=700;800&family=Bodoni+Moda:ital,opsz,wght=0,6..96,400..900;1,6..96,400..900&display=swap" rel="stylesheet">
+    
+    <!-- GSAP 顶级动效库 & ScrollTrigger 滚动插件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- Lenis 平滑滚动引擎 -->
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+    <style>
+        html.lenis, html.lenis body {
+            height: auto;
+        }
+        .lenis-smooth {
+            scroll-behavior: auto !important;
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            background-color: #F5F4F0;
+            color: #0E0E0E;
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
+        }
+
+        #global-gaze-circle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 90;
+            background-color: #0E0E0E;
+            border-radius: 50%;
+            will-change: transform, width, height, background-color, opacity;
+            transform: translate(-50%, -50%);
+            transition: background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #brand-hover-container {
+            pointer-events: none;
+            position: fixed;
+            width: 320px;
+            height: 480px;
+            z-index: 80;
+            overflow: hidden;
+            border-radius: 16px;
+            opacity: 0;
+            transform: scale(0.6) rotate(-8deg);
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            background: #111;
+        }
+
+        .physics-sticker {
+            position: absolute;
+            user-select: none;
+            will-change: transform;
+            cursor: grab;
+            filter: drop-shadow(0 12px 20px rgba(0,0,0,0.15));
+            z-index: 150;
+            touch-action: none;
+        }
+        .physics-sticker:active {
+            cursor: grabbing;
+            filter: drop-shadow(0 25px 40px rgba(0,0,0,0.3));
+        }
+
+        /* 环形旋转文字徽章 */
+        .rotating-stamp-text {
+            animation: rotate-stamp 25s linear infinite;
+            transform-origin: 50% 50%;
+        }
+        @keyframes rotate-stamp {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 空心描边艺术字体样式 */
+        .stroke-text {
+            -webkit-text-stroke: 1.5px currentColor;
+            color: transparent;
+        }
+
+        /* 转场剪裁蒙版层 */
+        #contact-content-panel {
+            will-change: clip-path;
+        }
+    </style>
+</head>
+<body class="antialiased select-none">
+
+    <!-- 全局极致细颗粒感奢华噪声蒙版 (提升整体页面质感) -->
+    <div class="fixed inset-0 pointer-events-none z-[999] opacity-[0.035] mix-blend-overlay">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+            <filter id="noiseFilter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+        </svg>
+    </div>
+
+    <!-- 全局核心视线追踪圆环 -->
+    <div id="global-gaze-circle" class="w-6 h-6"></div>
+
+    <!-- 品牌悬停交互实时预览框 (静态图片或动态图) -->
+    <div id="brand-hover-container">
+        <img id="brand-hover-img" src="" class="w-full h-full object-cover" alt="核心盟友卡片">
+    </div>
+
+    <!-- 法式极简高定复制成功的 Toast 提示盒 -->
+    <div id="toast-notification" class="fixed bottom-8 right-8 z-[200] bg-[#161616] text-white border border-brand-accent px-6 py-4 rounded-xl flex items-center gap-3 shadow-2xl transform translate-y-24 opacity-0 pointer-events-none transition-all duration-500">
+        <span class="text-brand-accent text-sm">✦</span>
+        <span class="font-sans text-xs font-bold tracking-widest uppercase" id="toast-message">微信已成功复制</span>
+    </div>
+
+    <header id="global-header" class="fixed top-0 left-0 w-full py-6 px-6 md:px-12 flex justify-between items-center z-50 text-brand-dark transition-colors duration-500">
+        <div class="flex items-center gap-12">
+            <a href="#" class="font-display font-extrabold text-xl tracking-tight relative group" onclick="lenis.scrollTo('#smooth-content'); return false;">
+                HW / 化我<span class="text-brand-accent">✦</span>
+            </a>
+            <div class="hidden lg:flex items-center gap-2 text-[10px] font-bold tracking-widest text-brand-gray uppercase">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>BREAK BOUNDS ✦ GROW IN TANGENT (2026)</span>
+            </div>
+        </div>
+
+        <nav class="flex items-center gap-6 text-[11px] font-bold tracking-wider">
+            <a href="#projects" class="hover:text-brand-accent transition-colors duration-300 py-1" onclick="lenis.scrollTo('#projects'); return false;">METHOD / 武器</a>
+            <a href="#brands" class="hover:text-brand-accent transition-colors duration-300 py-1" onclick="lenis.scrollTo('#brands'); return false;">ALLIES / 盟友</a>
+            <a href="#playground" class="hover:text-brand-accent transition-colors duration-300 py-1" onclick="lenis.scrollTo('#playground'); return false;">ARCHIVE / 档案</a>
+            <a href="#about" class="hover:text-brand-accent transition-colors duration-300 py-1" onclick="lenis.scrollTo('#about'); return false;">ETHOS / 背书</a>
+            <a href="#welfare" class="hover:text-brand-accent transition-colors duration-300 py-1" onclick="lenis.scrollTo('#welfare'); return false;">VALUE / 福利</a>
+            <a href="#contact-wrapper" class="hover:text-brand-accent transition-all duration-300 py-1 px-4 border border-brand-dark/20 hover:border-brand-dark rounded-full" onclick="lenis.scrollTo('#contact-wrapper'); return false;">JOIN / 价值共创</a>
+        </nav>
+    </header>
+
+    <div id="smooth-content">
+
+        <section id="interactive-opener" class="relative h-[150vh] bg-brand-dark text-brand-bg overflow-hidden flex flex-col justify-between">
+            <!-- 粒子星河背景 -->
+            <canvas id="opener-canvas" class="absolute inset-0 w-full h-full pointer-events-none opacity-40 z-0"></canvas>
+
+            <div class="sticky top-0 h-screen w-full flex flex-col justify-between pt-32 pb-16 px-6 md:px-12 overflow-hidden z-10">
+                
+                <div class="flex justify-between items-center text-[10px] tracking-widest text-brand-bg/40 uppercase font-mono">
+                    <span>№ 26 NO-DERISION ENERGY FIELD</span>
+                    <span>MOVE MOUSE TO ALIGN / 移动鼠标校准频率</span>
+                </div>
+
+                <!-- 优化后的高交互“引力 Hub” -->
+                <div id="interaction-hub" class="relative w-full h-[55vh] flex items-center justify-center cursor-pointer group" onclick="lenis.scrollTo('#hero-section')">
+                    
+                    <!-- 外层精密旋转坐标环 -->
+                    <div class="absolute w-[300px] h-[300px] rounded-full border border-white/[0.05] flex items-center justify-center animate-[spin_20s_linear_infinite]">
+                        <div class="w-full h-[1px] bg-white/[0.05]"></div>
+                        <div class="absolute w-[1px] h-full bg-white/[0.05]"></div>
+                    </div>
+                    
+                    <!-- 旋转文字环 -->
+                    <svg class="absolute w-[240px] h-[240px] rotating-stamp-text opacity-50 group-hover:opacity-100 transition-opacity duration-500" viewBox="0 0 100 100">
+                        <path id="hubTextPath" fill="none" d="M 50 50 m -40,0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0" />
+                        <text class="font-mono text-[5px] uppercase tracking-[0.5em] fill-white font-bold">
+                            <textPath href="#hubTextPath" startOffset="0%">✦ SYSTEM CALIBRATION ACTIVE ✦ READY TO CONNECT ✦</textPath>
+                        </text>
+                    </svg>
+
+                    <!-- 中心吸附核心 -->
+                    <div class="w-16 h-16 rounded-full bg-white/[0.02] border border-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-500 group-hover:bg-brand-accent group-hover:border-brand-accent group-hover:scale-110 shadow-[0_0_30px_rgba(197,168,128,0.2)]">
+                        <div class="w-3 h-3 rounded-full bg-white group-hover:bg-brand-dark animate-pulse"></div>
+                    </div>
+
+                    <!-- 引导文字提示 -->
+                    <div class="absolute -bottom-20 font-mono text-[10px] tracking-widest uppercase text-brand-bg/60">
+                        CLICK TO ENTER THE MATRIX / 点击进入同频空间
+                    </div>
+                </div>
+
+                <div class="max-w-xl mx-auto text-center text-[10px] tracking-widest text-brand-bg/50 uppercase font-mono leading-relaxed">
+                    移动鼠标以进行系统校准，点击以接入。
+                </div>
+            </div>
+        </section>
+
+        <section id="hero-section" class="min-h-screen flex flex-col justify-between pt-40 pb-16 px-6 md:px-12 relative overflow-hidden bg-brand-bg">
+            <div class="my-auto">
+                <div class="mb-4 flex items-center gap-3 text-xs font-bold tracking-widest text-brand-gray">
+                    <div class="w-4 h-4 relative flex items-center justify-center">
+                        <div id="anchor-hero-sec" class="w-2.5 h-2.5 rounded-full border border-brand-dark/50"></div>
+                    </div>
+                    <span>№ 26 — 浪尖领航者</span>
+                    <div class="w-8 h-[1px] bg-brand-gray/50"></div>
+                    <span>AI & 大学生 OPC</span>
+                </div>
+                
+                <h1 class="text-5xl md:text-8xl xl:text-[9vw] font-display font-extrabold leading-[0.95] tracking-tight uppercase">
+                    <div class="overflow-hidden block">
+                        <span class="hero-line block transform translate-y-full">HW / 化我</span>
+                    </div>
+                    <div class="overflow-hidden block">
+                        <span class="hero-line block transform translate-y-full text-transparent bg-clip-text bg-gradient-to-r from-brand-dark via-brand-gray to-brand-dark">AI AGENT</span>
+                    </div>
+                    <div class="overflow-hidden block">
+                        <span class="hero-line block transform translate-y-full">✦ OPC ALLY</span>
+                    </div>
+                </h1>
+
+                <!-- 恢复原图英文设计介绍 + 左右完美排版 -->
+                <div class="mt-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <p class="text-base md:text-xl text-brand-gray font-light max-w-xl leading-relaxed">
+                        我是一个喜欢 AI 的大学生，正在与先行者们一起在 OPC 破界前行。不走任何无意义的内卷套路，我渴望靠自己的极致执行力与技术杠杆，在大学期间实现真正的经济独立。
+                    </p>
+                    
+                    <!-- 恢复高端英文排版介绍栏 -->
+                    <div class="text-[10px] md:text-xs font-mono tracking-widest text-brand-gray uppercase max-w-xs leading-relaxed text-left md:text-right">
+                        CREATIVE DESIGNER & AI AGENT ARCHITECT. EXPERIMENTAL DIGITAL EXPERIENCES CRAFTED WITH PASSION, PURPOSE, AND CODE. (OPC ALLIANCE FOLIO)
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pt-12 border-t border-brand-dark/10 text-[10px] text-brand-gray font-mono tracking-widest uppercase">
+                <div class="flex gap-12">
+                    <div>
+                        <span class="block text-brand-gray/50 mb-1">LOCALIZATION / 坐标</span>
+                        <span class="text-brand-dark font-bold">GUANGZHOU, GD / 广东广州 (GMT+8)</span>
+                    </div>
+                    <div>
+                        <span class="block text-brand-gray/50 mb-1">CURRENT STATUS / 当前状态</span>
+                        <span class="text-brand-dark font-bold">26 届浪尖领航官 ✦ 大创省级立项负责人</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CAPABILITIES (我能提供) 场景：升级为硬核高概念逻辑线框图 -->
+        <section id="projects" class="py-32 px-6 md:px-12 bg-brand-dark text-white relative">
+            
+            <div class="absolute top-[20%] left-8 md:left-16 w-8 h-8 pointer-events-none opacity-0">
+                <div id="anchor-projects" class="w-full h-full rounded-full"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-24 border-b border-white/15 pb-8">
+                    <div>
+                        <span class="text-xs tracking-widest text-brand-accent uppercase font-bold">№01 / CORE SERVICE / 我能提供</span>
+                        <h2 class="text-4xl md:text-6xl font-display font-black mt-2 uppercase">CAPABILITIES</h2>
+                    </div>
+                    <span class="text-xs text-brand-gray max-w-xs font-mono uppercase tracking-wider leading-relaxed">
+                        极致利他的核心武器库：大学综测方法论、智能体部署与大学破规训认知。
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-y-32 md:gap-x-12">
+                    
+                    <!-- 卡片 01: AI 智能体体系 -->
+                    <div class="md:col-span-7 flex flex-col group cursor-pointer">
+                        <div class="relative overflow-hidden aspect-[16/10] bg-neutral-900 border border-white/10 rounded-xl p-8 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                            <div class="flex justify-between items-start">
+                                <span class="font-mono text-xs text-brand-accent">✦ ARCHITECTURE</span>
+                                <span class="font-mono text-[10px] text-white/40">v2.60</span>
+                            </div>
+                            
+                            <!-- 动态交互式 AI 终端控制台 -->
+                            <div class="my-auto w-full h-[45%] rounded-lg border border-white/10 bg-black/40 p-4 font-mono text-[10px] text-emerald-400/90 overflow-hidden relative flex flex-col justify-between group-hover:border-emerald-500/30 transition-all duration-500 shadow-inner">
+                                <div class="flex items-center gap-1.5 border-b border-white/5 pb-2 mb-2 text-white/30 text-[8px] uppercase tracking-widest">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500/60"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500/60"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/60"></span>
+                                    <span class="ml-2 font-bold text-white/40">agent_runtime_core.sh</span>
+                                </div>
+                                <div class="flex-1 space-y-1.5 leading-normal text-white/50">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-brand-accent">✦</span>
+                                        <span>deploy_ai_agents --optimize --leverage</span>
+                                    </div>
+                                    <div class="text-emerald-400 flex items-center gap-1">
+                                        <span>[SUCCESS]</span>
+                                        <span class="text-white/40">Task automations successfully wired.</span>
+                                    </div>
+                                    <div class="text-white/30">
+                                        &gt;&gt; Loading Claude Code workflow matrix...
+                                    </div>
+                                    <div class="text-brand-accent/80 flex items-center gap-1 font-bold">
+                                        <span>[OPC ALLY]</span>
+                                        <span>System idle. Efficiency multiplier: 8.5x</span>
+                                    </div>
+                                </div>
+                                <div class="absolute bottom-2 right-4 flex items-center gap-1 text-white/20 text-[8px] tracking-widest font-bold uppercase">
+                                    <span>ACTIVE PROCESS</span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                </div>
+                            </div>
+
+                            <div class="font-display font-extrabold text-2xl uppercase tracking-tight">AI Agent 生产力实装</div>
+                        </div>
+                        <div class="flex justify-between items-start mt-6">
+                            <div>
+                                <h3 class="text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">01 / AI 前沿实战装配</h3>
+                                <p class="text-xs text-brand-gray mt-1">手把手部署先进 Agent 场景（如 NEWMAX AI、Claude Code、自动化流），用技术解放机械化劳动。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 卡片 02: 综测学神心法 -->
+                    <div class="md:col-span-5 md:mt-24 flex flex-col group cursor-pointer">
+                        <div class="relative overflow-hidden aspect-[4/5] bg-neutral-900 border border-white/10 rounded-xl p-8 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                            <div class="flex justify-between items-start">
+                                <span class="font-mono text-xs text-brand-accent">✦ METHODOLOGY</span>
+                                <span class="font-mono text-[10px] text-white/40">MATRIX</span>
+                            </div>
+                            
+                            <!-- 精算师物理杠杆倍增模型 (带有悬停微翘动画) -->
+                            <div class="my-auto w-full h-[50%] flex items-center justify-center relative overflow-hidden">
+                                <svg class="w-11/12 h-full opacity-60 text-white transition-transform duration-700 group-hover:scale-105" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- 刻度线 -->
+                                    <line x1="20" y1="90" x2="180" y2="90" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.3"/>
+                                    <!-- 杠杆支点 -->
+                                    <polygon points="60,90 53,105 67,105" stroke="#C5A880" stroke-width="1.2" fill="#0E0E0E"/>
+                                    
+                                    <!-- 杠杆横梁 (带有悬停微翘动画) -->
+                                    <g class="lever-beam origin-[60px_90px] transition-transform duration-500 group-hover:rotate-[-6deg]">
+                                        <!-- 杠杆主梁 -->
+                                        <line x1="15" y1="90" x2="185" y2="90" stroke="currentColor" stroke-width="2"/>
+                                        
+                                        <!-- 左侧：微小付出 (Effort Point) -->
+                                        <circle cx="30" cy="80" r="4" fill="#C5A880"/>
+                                        <line x1="30" y1="80" x2="30" y2="90" stroke="#C5A880" stroke-width="1"/>
+                                        <text x="30" y="68" class="font-mono text-[7px] text-center fill-[#C5A880]/80" text-anchor="middle" font-weight="bold">EFFORT (1x)</text>
+
+                                        <!-- 右侧：巨大综测回报 (Leveraged Value) -->
+                                        <rect x="135" y="55" width="30" height="30" rx="3" fill="currentColor" stroke="#0E0E0E" stroke-width="1" opacity="0.8"/>
+                                        <line x1="150" y1="85" x2="150" y2="90" stroke="currentColor" stroke-width="1"/>
+                                        <text x="150" y="44" class="font-mono text-[8px] fill-white" text-anchor="middle" font-weight="bold">VALUE (10x)</text>
+                                        <!-- 杠杆力臂标记线 -->
+                                        <path d="M60,78 L150,78" stroke="currentColor" stroke-width="0.5" stroke-dasharray="1 1"/>
+                                        <text x="105" y="73" class="font-mono text-[6px] fill-white/40" text-anchor="middle">LEVERAGE ARM (4x Length)</text>
+                                    </g>
+                                </svg>
+                            </div>
+                            
+                            <div class="font-display font-extrabold text-2xl uppercase tracking-tight">综测降维加分体系</div>
+                        </div>
+                        <div class="flex justify-between items-start mt-6">
+                            <div>
+                                <h3 class="text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">02 / 综测加分最速路径</h3>
+                                <p class="text-xs text-brand-gray mt-1">精算师逻辑：只做加分最有效、杠杆最大的事件。排除无效努力，实现效率最大化。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 卡片 03: 竞赛经验全景 -->
+                    <div class="md:col-span-12 mt-12 flex flex-col group cursor-pointer">
+                        <div class="relative overflow-hidden aspect-[21/9] bg-neutral-900 border border-white/10 rounded-xl p-8 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                            <div class="flex justify-between items-start">
+                                <span class="font-mono text-xs text-brand-accent">✦ INITIATION</span>
+                                <span class="font-mono text-[10px] text-white/40">PROVINCIAL</span>
+                            </div>
+                            
+                            <!-- 省级大创培育与商业闭环全景流程 -->
+                            <div class="my-auto w-full h-[40%] flex items-center justify-center py-4">
+                                <svg class="w-full h-full opacity-50 text-white" viewBox="0 0 800 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- 贯穿连接主线 -->
+                                    <line x1="50" y1="50" x2="750" y2="50" stroke="currentColor" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.3"/>
+                                    
+                                    <!-- 节点 1: 痛点洞察 -->
+                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
+                                        <circle cx="100" cy="50" r="6" fill="#0E0E0E" stroke="currentColor" stroke-width="1.5"/>
+                                        <circle cx="100" cy="50" r="2" fill="currentColor"/>
+                                        <text x="100" y="32" class="font-sans text-[10px] fill-white/40" text-anchor="middle">STEP 01</text>
+                                        <text x="100" y="75" class="font-sans text-[11px] font-bold fill-white" text-anchor="middle">痛点与商业选题</text>
+                                    </g>
+
+                                    <!-- 节点 2: 申报书打磨 (Highlighted Provincial Peak) -->
+                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
+                                        <circle cx="320" cy="50" r="8" fill="#0E0E0E" stroke="#C5A880" stroke-width="2"/>
+                                        <circle cx="320" cy="50" r="3" class="animate-pulse" fill="#C5A880"/>
+                                        <text x="320" y="30" class="font-mono text-[9px] fill-brand-accent" text-anchor="middle" font-weight="bold">PROVINCIAL 立项</text>
+                                        <text x="320" y="75" class="font-sans text-[11px] font-bold fill-brand-accent" text-anchor="middle">申报书精算打磨</text>
+                                    </g>
+
+                                    <!-- 节点 3: 团队与商业合伙 -->
+                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
+                                        <circle cx="540" cy="50" r="6" fill="#0E0E0E" stroke="currentColor" stroke-width="1.5"/>
+                                        <circle cx="540" cy="50" r="2" fill="currentColor"/>
+                                        <text x="540" y="32" class="font-sans text-[10px] fill-white/40" text-anchor="middle">STEP 03</text>
+                                        <text x="540" y="75" class="font-sans text-[11px] font-bold fill-white" text-anchor="middle">跨学科团队建组</text>
+                                    </g>
+
+                                    <!-- 节点 4: 闭环验证落地 -->
+                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
+                                        <circle cx="700" cy="50" r="6" fill="#0E0E0E" stroke="currentColor" stroke-width="1.5"/>
+                                        <circle cx="700" cy="50" r="2" fill="currentColor"/>
+                                        <text x="700" y="32" class="font-sans text-[10px] fill-white/40" text-anchor="middle">STEP 04</text>
+                                        <text x="700" y="75" class="font-sans text-[11px] font-bold fill-white" text-anchor="middle">商业闭环跑通</text>
+                                    </g>
+                                </svg>
+                            </div>
+
+                            <div class="font-display font-extrabold text-2xl uppercase tracking-tight">大创项目书与竞赛方法论</div>
+                        </div>
+                        <div class="flex justify-between items-start mt-6">
+                            <div>
+                                <h3 class="text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">03 / 竞赛与大创蓝图落地</h3>
+                                <p class="text-xs text-brand-gray mt-1">省级大创立项负责人的第一手干货：从选题、申报书打磨、团队组建、到商业闭环构建的一站式复盘经验。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="kinetic-marquee" class="py-20 bg-[#F5F4F0] text-brand-dark overflow-hidden relative border-t border-b border-brand-dark/10 select-none">
+            
+            <div class="absolute top-[10%] right-[15%] w-8 h-8 pointer-events-none z-20">
+                <div id="anchor-marquee" class="w-4 h-4 rounded-full border-2 border-brand-dark"></div>
+            </div>
+
+            <!-- 轨道 1: 正向快速流动 -->
+            <div class="marquee-track flex whitespace-nowrap items-center py-4" data-direction="-1">
+                <div class="marquee-group flex items-center gap-16 text-[10vw] font-display font-extrabold leading-none uppercase">
+                    <span>CO-LEARNING</span>
+                    <span class="text-brand-accent font-serif font-light">✦</span>
+                    <span class="stroke-text">VALUE EXCHANGE</span>
+                    <span class="text-brand-accent font-serif font-light">✦</span>
+                    
+                    <span class="inline-flex items-center">
+                        F
+                        <span class="interactive-glyph w-[10vw] h-[10vw] mx-1 border border-brand-dark rounded-full inline-flex items-center justify-center relative bg-[#EAD5C3]/15">
+                            <svg class="glyph-arrow w-[5.5vw] h-[5.5vw] text-brand-dark transform origin-center transition-transform duration-100 ease-out" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>
+                            </svg>
+                        </span>
+                        LIO
+                    </span>
+                    <span class="text-brand-accent font-serif font-light">✦</span>
+                </div>
+            </div>
+
+            <!-- 轨道 2: 逆向交错流淌 -->
+            <div class="marquee-track flex whitespace-nowrap items-center py-4 border-t border-brand-dark/5" data-direction="1">
+                <div class="marquee-group flex items-center gap-16 text-[10vw] font-display font-extrabold leading-none uppercase">
+                    <span class="stroke-text">CLAUDE CODE</span>
+                    <span class="text-brand-accent font-serif font-light">✦</span>
+                    <span>BREAK BOUNDARIES</span>
+                    <span class="text-brand-accent font-serif font-light">✦</span>
+                    
+                    <span class="inline-flex items-center">
+                        C
+                        <span class="interactive-glyph w-[10vw] h-[10vw] mx-1 border border-brand-dark rounded-full inline-flex items-center justify-center relative bg-brand-dark/5">
+                            <svg class="glyph-arrow w-[5.5vw] h-[5.5vw] text-brand-accent transform origin-center transition-transform duration-100 ease-out" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>
+                            </svg>
+                        </span>
+                        NCEPT
+                    </span>
+                    <span class="text-brand-accent font-serif font-light">✦</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="brands" class="py-32 px-6 md:px-12 bg-brand-bg text-brand-dark relative border-b border-brand-dark/10">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                
+                <!-- 左侧固定信息栏 -->
+                <div class="lg:col-span-4 flex flex-col justify-between h-auto lg:h-[450px] sticky top-32">
+                    <div class="relative">
+                        <div class="w-8 h-8 mb-6 relative">
+                            <div id="anchor-brands" class="w-6 h-6 rounded-full border-2 border-brand-dark"></div>
+                        </div>
+                        
+                        <span class="text-xs font-mono tracking-widest text-brand-gray block mb-4">/ BRAND CO-OPERATION / 盟友圈</span>
+                        <h3 class="text-xs font-bold tracking-widest uppercase leading-normal text-brand-dark max-w-[200px]">
+                            SELECT COLLABORATORS & ALLIES / 个人深度共创同频伙伴
+                        </h3>
+                    </div>
+
+                    <!-- 动态自旋转多极星芒针 -->
+                    <div class="my-12 lg:my-0 relative w-24 h-24 flex items-center justify-center">
+                        <svg class="asterisk-spin w-20 h-20 text-brand-dark" viewBox="0 0 100 100">
+                            <g stroke="currentColor" stroke-width="4.5" stroke-linecap="round">
+                                <line x1="50" y1="10" x2="50" y2="90" />
+                                <line x1="10" y1="50" x2="90" y2="50" />
+                                <line x1="21.7" y1="21.7" x2="78.3" y2="78.3" />
+                                <line x1="21.7" y1="78.3" x2="78.3" y2="21.7" />
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div class="hidden lg:block text-xs font-mono tracking-widest text-brand-gray uppercase">
+                        OPC / NOVA ISLAND / PERSONAL HUB
+                    </div>
+                </div>
+
+                <!-- 右侧 brand 风琴折叠名录 -->
+                <div class="lg:col-span-8 w-full border-t border-brand-dark/10">
+                    
+                    <!-- 品牌 1: 破界青年OPC -->
+                    <div class="brand-row py-8 border-b border-brand-dark/10 flex flex-col group cursor-pointer"
+                         data-hover-img="ai_portfolio_opc.png"
+                         data-fallback="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80">
+                        <span class="text-[10px] font-bold tracking-widest text-brand-gray uppercase mb-2">破界青年 OPC 盟友</span>
+                        <div class="flex items-end justify-between">
+                            <h4 class="text-4xl md:text-6xl font-serif font-light tracking-wide transition-all duration-300 group-hover:translate-x-4">
+                                OPC / 破界青年
+                            </h4>
+                            <div class="flex items-center gap-4">
+                                <span class="font-mono text-[10px] border border-brand-dark/30 rounded-full px-4 py-1">26.06.10 / 盟友</span>
+                                <div class="w-8 h-8 rounded-full border border-brand-dark/30 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-brand-bg transition-colors duration-300">
+                                    ✦
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 品牌 2: 新岛 AI -->
+                    <div class="brand-row py-8 border-b border-brand-dark/10 flex flex-col group cursor-pointer"
+                         data-hover-img="ai_portfolio_nova.png"
+                         data-fallback="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=600&q=80">
+                        <span class="text-[10px] font-bold tracking-widest text-brand-gray uppercase mb-2">NOVA ISLAND AI-POWERED PASS</span>
+                        <div class="flex items-end justify-between">
+                            <h4 class="text-4xl md:text-6xl font-serif font-light tracking-wide transition-all duration-300 group-hover:translate-x-4">
+                                NOVA / 新岛 AI
+                            </h4>
+                            <div class="flex items-center gap-4">
+                                <span class="font-mono text-[10px] border border-brand-dark/30 rounded-full px-4 py-1">N-086 / 正式岛友</span>
+                                <div class="w-8 h-8 rounded-full border border-brand-dark/30 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-brand-bg transition-colors duration-300">
+                                    ↓
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 品牌 3: 个人社群 -->
+                    <div class="brand-row py-8 border-b border-brand-dark/10 flex flex-col group cursor-pointer"
+                         data-hover-img="wanwu_poster_dark.jpg"
+                         data-fallback="https://images.unsplash.com/photo-1604871000636-074fa5117945?auto=format&fit=crop&w=600&q=80">
+                        <span class="text-[10px] font-bold tracking-widest text-brand-gray uppercase mb-2">PERSONAL HIGH-ENERGY HUB</span>
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <h4 class="text-4xl md:text-6xl font-serif font-light tracking-wide transition-all duration-300 group-hover:translate-x-4">
+                                    HUB / 个人社群
+                                </h4>
+                                <div class="flex items-center gap-2 mt-2 pl-0 group-hover:translate-x-4 transition-all duration-300">
+                                    <span class="w-2 h-2 rounded-full bg-[#C5A880] animate-pulse"></span>
+                                    <span class="text-[9px] font-mono tracking-widest text-brand-gray uppercase">Hover to reveal "万物化我" core matrix / 悬浮呈现精神图腾</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="font-mono text-[10px] border border-brand-dark/30 rounded-full px-4 py-1">v1.2 / 同频基地</span>
+                                <div class="w-8 h-8 rounded-full border border-brand-dark/30 flex items-center justify-center text-brand-dark group-hover:bg-brand-dark group-hover:text-brand-bg transition-colors duration-300">
+                                    →
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="playground" class="py-32 bg-brand-bg relative overflow-hidden border-b border-brand-dark/10">
+            <div class="max-w-7xl mx-auto px-6 md:px-12">
+                
+                <div class="mb-20">
+                    <span class="text-xs tracking-widest text-brand-gray uppercase font-bold">LABS & EXPERIMENTS / 极简几何演练场</span>
+                    
+                    <h2 class="text-[7.5vw] font-display font-black leading-[0.85] tracking-tight text-brand-dark uppercase">
+                        VISUAL<br>PL<span class="inline-block w-[6.8vw] h-[6.8vw] relative mx-1 align-middle select-none border border-brand-dark/15 rounded-full" id="playground-o-placeholder"></span>YGROUND
+                    </h2>
+                </div>
+
+                <!-- 游乐场非对称极客高格调卡片排布 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-start">
+                    
+                    <!-- 实验卡 01: LLM 知识库 -->
+                    <div class="flex flex-col group cursor-pointer md:translate-y-12">
+                        <div class="relative overflow-hidden aspect-[16/12] bg-[#0E0E0E] border border-brand-dark/10 rounded-2xl p-6 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500 shadow-lg">
+                            <div class="flex justify-between items-start z-10">
+                                <span class="text-brand-accent font-mono text-xs font-bold">№ 01 / LLM KNOWLEDGE GRAPH</span>
+                                <span class="text-brand-gray font-mono text-[10px]">Active Node</span>
+                            </div>
+                            
+                            <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[75%] overflow-hidden flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity duration-500 px-4">
+                                <img src="ai_portfolio_llm.png" 
+                                     class="w-full h-full object-contain filter brightness-110 contrast-125 saturate-50 hover:scale-105 transition-transform duration-700 ease-out" 
+                                     alt="LLM 神经网络拓扑图"
+                                     onerror="this.src='https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80'">
+                            </div>
+
+                            <div class="flex justify-between text-[11px] font-bold tracking-wider uppercase font-mono text-brand-gray z-10">
+                                <span class="text-white">LLM 智能体知识库</span>
+                                <span class="text-brand-accent">✦ ARCHITECTURE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 实验卡 02: 社群资料包认知日志 -->
+                    <div class="flex flex-col group cursor-pointer">
+                        <div class="relative overflow-hidden aspect-[16/12] bg-white border border-brand-dark/10 rounded-2xl p-6 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500 shadow-xl">
+                            <div class="flex justify-between items-start z-10">
+                                <span class="text-brand-dark font-mono text-xs font-bold">№ 02 / COGNITIVE CHRONICLES</span>
+                                <span class="text-brand-gray font-mono text-[10px]">Cloud Repository</span>
+                            </div>
+                            
+                            <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[75%] overflow-hidden flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity duration-500 px-4">
+                                <div class="w-full h-full border border-neutral-100 rounded-xl overflow-hidden shadow-inner bg-white">
+                                    <img src="cognitive_diary.png" 
+                                         class="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700 ease-out" 
+                                         alt="万物与化我认知沉淀志"
+                                         onerror="this.src='https://images.unsplash.com/photo-1606857521015-7f9fcf423740?auto=format&fit=crop&w=800&q=80'">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between text-[11px] font-bold tracking-wider uppercase font-mono text-brand-gray z-10">
+                                <span class="text-brand-dark">万物与化我 · 认知沉淀志</span>
+                                <span class="text-brand-accent">✦ RESOURCE PACK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-32 px-6 md:px-12 bg-brand-dark text-white relative">
+            
+            <div class="absolute top-[25%] left-8 md:left-16 w-8 h-8 pointer-events-none opacity-0">
+                <div id="anchor-about" class="w-full h-full rounded-full"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+                <div class="lg:col-span-8">
+                    <span class="text-xs tracking-widest text-brand-accent uppercase font-bold">№02 / ACADEMIC RECORD & ETHOS / 极致能效背书</span>
+                    
+                    <div class="mt-8 mb-12 flex flex-col md:flex-row gap-8 items-start md:items-center">
+                        <!-- 艺术高对比黑白肖像容器 -->
+                        <div class="w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden bg-zinc-800 border border-white/15 shrink-0 shadow-2xl">
+                            <img src="ai_portfolio_portrait.jpg" 
+                                 class="w-full h-full object-cover filter grayscale contrast-125 brightness-90 hover:grayscale-0 hover:scale-105 transition-all duration-700 ease-out" 
+                                 alt="化我肖像"
+                                 onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=500&q=80'">
+                        </div>
+
+                        <div>
+                            <h3 id="ethos-text" class="text-3xl md:text-5xl font-display font-bold uppercase leading-tight text-brand-bg">
+                                一个热爱 AI 的大学生，<br>
+                                正和先行者一起在 OPC 破界前行。
+                            </h3>
+                            <p class="text-lg text-brand-gray mt-6 font-light">
+                                不依靠任何无意义的内卷，只打算靠自己的极致执行力与技术杠杆，在大学期间实现真正的经济独立。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4 flex flex-col gap-8 border-l border-white/10 pl-8">
+                    <div>
+                        <h4 class="text-lg font-bold text-brand-accent">26 届浪尖领航官</h4>
+                        <p class="text-sm text-brand-gray mt-2">破界前行，担任前沿青年成长领袖及硬核 AI 技术的推广使使者。</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-brand-accent">大创省级立项负责人</h4>
+                        <p class="text-sm text-brand-gray mt-2">从零到一孵化省级创新项目，沉淀出一整套竞赛申报与项目包装书方法论。</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-brand-accent">大一综测全级第一</h4>
+                        <p class="text-sm text-brand-gray mt-2">精算师思维：绩点全级第四。只把精力灌注在能产生最大杠杆价值的核心事件上。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="welfare" class="py-32 px-6 md:px-12 bg-brand-bg text-brand-dark border-b border-brand-dark/10 relative overflow-hidden">
+            
+            <!-- 福利场景特有磁性吸附靶点 -->
+            <div class="absolute top-[30%] right-8 md:right-24 w-8 h-8 pointer-events-none opacity-0">
+                <div id="anchor-welfare" class="w-full h-full rounded-full"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <div class="lg:col-span-7 flex flex-col justify-center">
+                    <div class="flex items-center gap-3 text-xs font-mono tracking-widest text-brand-gray uppercase mb-6 font-bold">
+                        <span>№03 / HIGH-VALUE GIFTS / 独家福利</span>
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    </div>
+                    
+                    <h2 class="text-3xl md:text-5xl font-display font-black leading-tight uppercase mb-8">
+                        GROWTH ENGINE <br>
+                        <span class="text-brand-accent">✦ 破圈资料免费领</span>
+                    </h2>
+                    
+                    <p class="text-base md:text-lg text-brand-gray font-light leading-relaxed mb-6">
+                        在不内卷的破界之路上，为了帮助同样有野心、有执行力的你。我将大一实现全级综测第一的通关方法论、省级大创项目打磨书模板、以及助我实现认知突围的硬核 AI 提示词库，全部整理成了无保留的资料包。
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4 text-[11px] font-mono font-bold tracking-widest text-brand-dark/80">
+                        <span class="px-4 py-2 bg-neutral-200/50 rounded-full">✦ 综测最速加分路径</span>
+                        <span class="px-4 py-2 bg-neutral-200/50 rounded-full">✦ 省级大创申报书模版</span>
+                        <span class="px-4 py-2 bg-neutral-200/50 rounded-full">✦ 破规训认知 AI 提示词</span>
+                    </div>
+                </div>
+
+                <!-- 交互式微信添加卡片 (法式高对比极简线条) -->
+                <div class="lg:col-span-5 w-full">
+                    <div id="wechat-trigger-card" class="relative group overflow-hidden bg-brand-dark text-white rounded-2xl p-8 border border-white/5 shadow-2xl transition-all duration-500 hover:border-brand-accent/50 cursor-pointer">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-brand-accent/10 to-transparent rounded-full filter blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div class="flex justify-between items-start mb-12">
+                            <span class="font-mono text-xs text-brand-accent">✦ CLICK ID TO COPY</span>
+                            <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-brand-accent group-hover:bg-brand-accent group-hover:text-brand-dark transition-colors duration-300">
+                                →
+                            </div>
+                        </div>
+
+                        <div class="mb-8">
+                            <span class="block text-[10px] font-mono text-brand-gray uppercase tracking-widest mb-2">WECHAT ACCOUNT ID / 微信账号</span>
+                            <div id="click-wechat" class="text-3xl md:text-4xl font-display font-extrabold tracking-wider text-brand-bg transition-colors duration-300 group-hover:text-brand-accent select-all">
+                                HuaWo135
+                            </div>
+                        </div>
+
+                        <div class="border-t border-white/10 pt-6 flex justify-between items-center text-[10px] font-mono tracking-widest text-brand-gray uppercase">
+                            <span>添加时请备注：领资料包</span>
+                            <span class="text-brand-accent font-bold group-hover:animate-pulse">✦ TAP TO COPY / 点击复制</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="contact-wrapper" class="relative h-screen bg-brand-bg overflow-hidden">
+            
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 pointer-events-none z-20">
+                <div id="anchor-portal-start" class="w-full h-full rounded-full"></div>
+            </div>
+
+            <!-- 底层静止提示盘 -->
+            <div id="portal-underlay" class="absolute inset-0 flex flex-col items-center justify-center bg-[#F5F4F0] z-0">
+                <div id="portal-graphic" class="w-[180px] h-[180px] rounded-full border border-brand-dark/20 flex items-center justify-center relative">
+                    <svg class="w-36 h-36 text-brand-dark rotating-stamp-text" style="animation-duration: 25s;" viewBox="0 0 100 100">
+                        <path id="underlayTextPath" fill="none" d="M 50 14 A 36 36 0 1 1 49.9 14" />
+                        <text class="font-mono text-[6px] uppercase tracking-widest fill-brand-dark/80 font-bold">
+                            <textPath href="#underlayTextPath" startOffset="0%">&nbsp;✦ KEEP SCROLLING TO ALIGN FREQUENCY / 持续下滚加入同频阵营 ✦</textPath>
+                        </text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 极致放大后的转场面板 (初始 Clip 比例为 0% 完美，由 GSAP Scrub 控制) -->
+            <div id="contact-content-panel" class="absolute inset-0 bg-brand-footerBg text-white overflow-hidden flex flex-col justify-between pt-24 pb-16 z-10" style="clip-path: circle(0% at 50% 50%);">
+                
+                <div class="max-w-[1400px] mx-auto px-6 md:px-12 w-full relative z-20 transform translate-y-10 opacity-0 transition-transform duration-1000">
+                    <!-- 页脚品牌声明 -->
+                    <div class="flex justify-between items-start mb-16">
+                        <div class="font-serif text-2xl tracking-wide uppercase select-none leading-tight">
+                            HW / 化我<span class="text-sm text-brand-accent align-middle">✦</span>
+                        </div>
+                        
+                        <div class="plus-trigger cursor-pointer group flex items-center justify-center w-12 h-12 rounded-full border border-white/10 hover:border-white/50 transition-colors duration-300">
+                            <svg class="w-6 h-6 text-white transform group-hover:rotate-90 transition-transform duration-500 ease-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 巨幅艺术联络标语 - 经过彻底的响应式防溢出容器重构 -->
+                    <div class="w-full overflow-hidden select-none mb-12 px-4 text-center">
+                        <div class="flex items-center justify-center py-4">
+                            <h2 class="text-4xl sm:text-6xl md:text-7xl xl:text-[7.5vw] font-serif font-light tracking-wider uppercase leading-none text-white text-center break-words max-w-full">
+                                FREQUENCY <span class="font-sans text-brand-accent">✦</span> 同频共振
+                            </h2>
+                        </div>
+                    </div>
+
+                    <!-- 页脚细节排版 -->
+                    <div class="border-t border-white/10 pt-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-[10px] font-mono tracking-widest text-brand-gray uppercase mb-24">
+                        <div class="leading-relaxed max-w-sm">
+                           致力于结识能量磁场好、懂得价值互换的同频伙伴。这里从不嘲笑任何付出努力的人。
+                        </div>
+                        <div class="md:text-center flex items-center md:justify-center">
+                            CO-LEARN AI & INTENSITY / 一起探索 Agent 纪元
+                        </div>
+                        <div class="md:text-right">
+                            © 2026 HW / 化我. ALL RIGHTS RESERVED.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 交互式复制金句 (采用自适应指针和高反馈颜色过渡) -->
+                <div class="absolute bottom-28 left-0 w-full text-center pointer-events-none select-none z-10 px-4">
+                    <span id="click-email" class="text-[5vw] font-serif font-bold text-white/[0.08] hover:text-brand-accent/40 transition-colors duration-500 tracking-tight leading-none pointer-events-auto cursor-pointer">
+                        人生是配得感的修行，你我共勉。
+                    </span>
+                </div>
+
+                <div id="sticker-container" class="absolute inset-0 w-full h-full z-[120] pointer-events-none opacity-0">
+                    
+                    <!-- 优化后的贴纸 1: OPC 浪尖突破联盟黑金微缩罗盘 -->
+                    <div class="physics-sticker pointer-events-auto" data-lenis-prevent style="width: 130px; height: 130px;" data-weight="1.15">
+                        <svg class="w-full h-full filter drop-shadow-lg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 深炭黑圆盘底座 -->
+                            <circle cx="50" cy="50" r="47" fill="#111111" stroke="#C5A880" stroke-width="1.8" />
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#C5A880" stroke-width="0.6" stroke-dasharray="2 3" opacity="0.6" />
+                            
+                            <!-- 外部环绕金字 -->
+                            <g class="rotating-stamp-text" style="animation-duration: 20s;">
+                                <path id="textPathSticker1" fill="none" d="M 50 11 A 39 39 0 1 1 49.9 11" />
+                                <text class="font-mono text-[4.8px] uppercase tracking-widest fill-[#C5A880] font-extrabold">
+                                    <textPath href="#textPathSticker1" startOffset="0%">&nbsp;✦ BREAK BOUNDS ALLIANCE ✦ EST. 2026 ✦ DRAG ME</textPath>
+                                </text>
+                            </g>
+                            
+                            <!-- 中央高精3D矢量星芒 (象征OPC) -->
+                            <g transform="translate(50, 50)">
+                                <path d="M 0,-18 L 3.5,-5 L 16,-16 L 5,-3.5 L 18,0 L 5,3.5 L 16,16 L 3.5,5 L 0,18 L -3.5,5 L -16,16 L -5,3.5 L -18,0 L -5,-3.5 L -16,-16 L -3.5,-5 Z" fill="#C5A880"/>
+                                <circle cx="0" cy="0" r="3.5" fill="#111111" />
+                                <circle cx="0" cy="0" r="1.5" fill="#C5A880" />
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- 优化后的贴纸 2: AI 智能体思维坐标罗盘 (沙岩暖灰) -->
+                    <div class="physics-sticker pointer-events-auto" data-lenis-prevent style="width: 125px; height: 125px;" data-weight="1.30">
+                        <svg class="w-full h-full filter drop-shadow-lg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 沙岩暖色盘 -->
+                            <circle cx="50" cy="50" r="47" fill="#F5F4F0" stroke="#0E0E0E" stroke-width="2" />
+                            <circle cx="50" cy="50" r="39" fill="none" stroke="#0E0E0E" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.5" />
+                            
+                            <!-- 逆向自转字环 -->
+                            <g class="rotating-stamp-text" style="animation-duration: 28s; animation-direction: reverse;">
+                                <path id="textPathSticker2" fill="none" d="M 50 15 A 35 35 0 1 1 49.9 15" />
+                                <text class="font-mono text-[4.8px] uppercase tracking-widest fill-[#0E0E0E] font-bold">
+                                    <textPath href="#textPathSticker2" startOffset="0%">&nbsp;✦ HUA WO COGNITIVE LABS ✦ SYSTEM CORE ✦ CO-LEARN</textPath>
+                                </text>
+                            </g>
+                            
+                            <!-- 中央科学十字对齐瞄准星 -->
+                            <g transform="translate(50, 50)" stroke="#0E0E0E" stroke-linecap="round">
+                                <circle cx="0" cy="0" r="10" stroke-width="0.8" fill="none" />
+                                <line x1="-15" y1="0" x2="15" y2="0" stroke-width="1" />
+                                <line x1="0" y1="-15" x2="0" y2="15" stroke-width="1" />
+                                <circle cx="0" cy="0" r="3" fill="#0E0E0E" stroke="none" />
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- 质感胶囊药丸贴纸 -->
+                    <div class="physics-sticker pointer-events-auto bg-[#F5F4F0] border-2 border-[#0E0E0E] text-brand-dark px-6 py-3 rounded-full font-serif text-sm tracking-wider font-extrabold shadow-lg hover:bg-[#C5A880] hover:text-white transition-colors duration-300" data-lenis-prevent data-weight="0.90">
+                        MUTUAL VALUE / 价值互换
+                    </div>
+                    <div class="physics-sticker pointer-events-auto bg-[#F5F4F0] border-2 border-[#0E0E0E] text-brand-dark px-6 py-3 rounded-full font-serif text-sm tracking-wider font-extrabold shadow-lg hover:bg-[#C5A880] hover:text-white transition-colors duration-300" data-lenis-prevent data-weight="0.95">
+                        CO-LEARNING AI / 一起学 AI
+                    </div>
+                    <div class="physics-sticker pointer-events-auto bg-[#F5F4F0] border-2 border-[#0E0E0E] text-brand-dark px-6 py-3 rounded-full font-serif text-sm tracking-wider font-extrabold shadow-lg hover:bg-[#C5A880] hover:text-white transition-colors duration-300" data-lenis-prevent data-weight="0.80">
+                        NO MOCKERY / 绝不嘲笑努力
+                    </div>
+                    <div class="physics-sticker pointer-events-auto bg-[#F5F4F0] border-2 border-[#0E0E0E] text-brand-dark px-6 py-3 rounded-full font-serif text-sm tracking-wider font-extrabold shadow-lg hover:bg-[#C5A880] hover:text-white transition-colors duration-300" data-lenis-prevent data-weight="0.85">
+                        HIGH ENERGY / 高能量
+                    </div>
+                </div>
+
+                <!-- 底层超精致信息标注 -->
+                <div class="max-w-[1400px] mx-auto px-6 md:px-12 w-full relative z-20">
+                    <div class="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-brand-gray font-mono uppercase">
+                        <p>© 2026 HW / 化我. ALL RIGHTS RESERVED.</p>
+                        <div class="flex gap-8">
+                            <a href="https://dribbble.com" class="hover:text-white transition-colors duration-300">DRIBBBLE</a>
+                            <a href="https://linkedin.com" class="hover:text-white transition-colors duration-300">LINKEDIN</a>
+                            <a href="https://behance.net" class="hover:text-white transition-colors duration-300">BEHANCE</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </div>
+
+    <script>
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+            smoothTouch: false,
+            touchMultiplier: 1.5,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // GSAP ScrollTrigger 桥接绑定
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', ScrollTrigger.update);
+
+        // 场景 1: 引力星尘 Canvas 引擎代码实现
+        const canvas = document.getElementById('opener-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, targetSpeed: 1 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.max(canvas.width, canvas.height) * (0.5 + Math.random() * 0.5);
+                this.x = canvas.width / 2 + Math.cos(angle) * distance;
+                this.y = canvas.height / 2 + Math.sin(angle) * distance;
+                this.size = 0.5 + Math.random() * 1.5;
+                this.speed = 0.4 + Math.random() * 1.2;
+                this.color = Math.random() > 0.3 ? '#C5A880' : '#F5F4F0';
+                this.opacity = 0.1 + Math.random() * 0.7;
+            }
+            update(speedFactor) {
+                const dx = canvas.width / 2 - this.x;
+                const dy = canvas.height / 2 - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 15) {
+                    this.reset();
+                    return;
+                }
+                const angle = Math.atan2(dy, dx);
+                this.x += Math.cos(angle) * this.speed * speedFactor;
+                this.y += Math.sin(angle) * this.speed * speedFactor;
+                this.opacity = Math.min(0.8, dist / 250);
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 180; i++) {
+            particles.push(new Particle());
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let speedFactor = 1.0;
+            if (mouse.x !== null) {
+                const dx = mouse.x - canvas.width / 2;
+                const dy = mouse.y - canvas.height / 2;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const maxDist = Math.min(canvas.width, canvas.height) / 2;
+                // 当鼠标向引力激活中枢聚拢时，星尘非线性加速汇聚
+                const proximity = Math.max(0, 1 - dist / maxDist);
+                speedFactor = 1.0 + Math.pow(proximity, 2.5) * 11.0;
+            }
+            particles.forEach(p => {
+                p.update(speedFactor);
+                p.draw();
+            });
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+
+        // 交互 Hub 的视差跟随逻辑
+        const hub = document.getElementById('interaction-hub');
+        window.addEventListener('mousemove', (e) => {
+            const rect = hub.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const deltaX = (e.clientX - centerX) * 0.05;
+            const deltaY = (e.clientY - centerY) * 0.05;
+
+            gsap.to(hub, {
+                x: deltaX,
+                y: deltaY,
+                duration: 0.6,
+                ease: "power2.out"
+            });
+        });
+
+        // 场景 1: 滚出开屏的视差收起
+        const openerTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "#interactive-opener",
+                start: "top top",
+                end: "bottom top",
+                scrub: 1.1,
+                pin: true,
+                pinSpacing: true
+            }
+        });
+
+        openerTl.to("#interaction-hub", {
+            scale: 0.45,
+            opacity: 0,
+            duration: 1.2,
+            ease: "power2.inOut"
+        }, 0);
+
+        // 全屏转场动画核心 Timeline (极致对位，零穿帮)
+        const portalTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "#contact-wrapper",
+                start: "top top",
+                end: "+=150%", 
+                scrub: 1.2,
+                pin: true,
+                pinSpacing: true
+            }
+        });
+
+        portalTl.to("#contact-content-panel", {
+            clipPath: "circle(145% at 50% 50%)",
+            duration: 1.0,
+            ease: "none"
+        }, 0)
+        .to("#contact-content-panel .max-w-\\[1400px\\]", {
+            opacity: 1,
+            y: 0,
+            stagger: 0.1,
+            duration: 0.6,
+            ease: "power3.out"
+        }, 0.3)
+        .to("#click-email", {
+            opacity: 1,
+            scale: 1,
+            duration: 0.6,
+            ease: "power3.out"
+        }, 0.5)
+        .to("#sticker-container", {
+            opacity: 1,
+            duration: 0.5,
+            ease: "power2.out"
+        }, 0.6)
+        .to("#global-header", {
+            color: '#F5F4F0',
+            duration: 0.4
+        }, 0.4);
+
+        // 跑马灯阻尼设置
+        const tracks = document.querySelectorAll('.marquee-track');
+        tracks.forEach(track => {
+            const group = track.querySelector('.marquee-group');
+            for (let i = 0; i < 3; i++) {
+                const clone = group.cloneNode(true);
+                track.appendChild(clone);
+            }
+
+            const dir = parseInt(track.getAttribute('data-direction')) || -1;
+            const groups = track.querySelectorAll('.marquee-group');
+
+            gsap.set(groups, {
+                xPercent: (i) => i * 100 * (dir * -1)
+            });
+
+            const loop = gsap.to(groups, {
+                xPercent: `+=${dir * 100}`,
+                repeat: -1,
+                duration: 20,
+                ease: "none",
+                modifiers: {
+                    xPercent: gsap.utils.unitize((x) => {
+                        const val = parseFloat(x);
+                        return val < -100 ? val + 300 : val > 200 ? val - 300 : val;
+                    })
+                }
+            });
+
+            track.loopInstance = loop;
+        });
+
+        lenis.on('scroll', ({ velocity }) => {
+            const speedMultiplier = 1 + Math.min(4.5, Math.abs(velocity) * 0.16);
+            tracks.forEach(track => {
+                if (track.loopInstance) {
+                    gsap.to(track.loopInstance, {
+                        timeScale: speedMultiplier,
+                        duration: 0.3,
+                        overwrite: "auto"
+                    });
+                }
+            });
+        });
+
+        gsap.ticker.add(() => {
+            tracks.forEach(track => {
+                if (track.loopInstance) {
+                    const currentScale = track.loopInstance.timeScale();
+                    if (currentScale > 1.0) {
+                        track.loopInstance.timeScale(currentScale + (1.0 - currentScale) * 0.04);
+                    }
+                }
+            });
+        });
+
+        // 动态计算高定互动字符中的箭头跟随鼠标角度
+        const interactiveGlyphs = document.querySelectorAll('.interactive-glyph');
+        window.addEventListener('mousemove', (e) => {
+            interactiveGlyphs.forEach(glyph => {
+                const rect = glyph.getBoundingClientRect();
+                const glyphX = rect.left + rect.width / 2;
+                const glyphY = rect.top + rect.height / 2;
+                const angle = Math.atan2(e.clientY - glyphY, e.clientX - glyphX);
+                const angleDegrees = angle * (180 / Math.PI);
+                gsap.to(glyph.querySelector('.glyph-arrow'), {
+                    rotation: angleDegrees - 90,
+                    duration: 0.4,
+                    ease: "power2.out"
+                });
+            });
+        });
+
+        const gazeCircle = document.getElementById('global-gaze-circle');
+        
+        let targetX = window.innerWidth / 2;
+        let targetY = window.innerHeight / 2;
+        let targetWidth = 24;
+        let targetHeight = 24;
+        let targetColor = '#F5F4F0';
+        let scaleX = 1;
+        let scaleY = 1;
+        let velocityStretch = 0;
+
+        lenis.on('scroll', ({ velocity }) => {
+            velocityStretch = velocity;
+        });
+
+        function renderGazeCircle() {
+            const viewportW = window.innerWidth;
+            const viewportH = window.innerHeight;
+
+            const sections = [
+                { id: 'interactive-opener', anchor: 'anchor-hero', color: '#F5F4F0', defaultSize: 24 },
+                { id: 'hero-section', anchor: 'anchor-hero-sec', color: '#0E0E0E', defaultSize: 14 },
+                { id: 'projects', anchor: 'anchor-projects', color: '#C5A880', defaultSize: 16 },
+                { id: 'kinetic-marquee', anchor: 'anchor-marquee', color: '#C5A880', defaultSize: 18 },
+                { id: 'brands', anchor: 'anchor-brands', color: '#0E0E0E', defaultSize: 16 },
+                { id: 'playground', anchor: 'playground-o-placeholder', color: '#0E0E0E', defaultSize: 76 },
+                { id: 'about', anchor: 'anchor-about', color: '#F5F4F0', defaultSize: 16 },
+                { id: 'welfare', anchor: 'anchor-welfare', color: '#C5A880', defaultSize: 22 }, 
+                { id: 'contact-wrapper', anchor: 'anchor-portal-start', color: '#0E0E0E', defaultSize: 24 }
+            ];
+
+            let activeSection = sections[0];
+            for (const sec of sections) {
+                const el = document.getElementById(sec.id);
+                if (!el) continue;
+                const rect = el.getBoundingClientRect();
+                if (rect.top <= viewportH / 2 && rect.bottom >= viewportH / 2) {
+                    activeSection = sec;
+                    break;
+                }
+            }
+
+            let targetXVal = viewportW / 2;
+            let targetYVal = viewportH / 2;
+            let targetWidthVal = activeSection.defaultSize;
+            let targetHeightVal = activeSection.defaultSize;
+            targetColor = activeSection.color;
+
+            const activeAnchor = document.getElementById(activeSection.anchor);
+            if (activeAnchor) {
+                const rect = activeAnchor.getBoundingClientRect();
+                targetXVal = rect.left + rect.width / 2;
+                targetYVal = rect.top + rect.height / 2;
+
+                if (activeSection.anchor === 'playground-o-placeholder') {
+                    targetWidthVal = rect.width;
+                    targetHeightVal = rect.height;
+                }
+            }
+
+            const progress = portalTl ? portalTl.progress() : 0;
+            let gazeOpacity = 1;
+            let gazeScale = 1;
+
+            if (progress > 0) {
+                const centerFixedX = viewportW / 2;
+                const centerFixedY = viewportH / 2;
+
+                const blend = Math.min(1, progress * 4.5);
+                targetXVal = gsap.utils.interpolate(targetXVal, centerFixedX, blend);
+                targetYVal = gsap.utils.interpolate(targetYVal, centerFixedY, blend);
+
+                if (progress < 0.25) {
+                    const sizeBlend = progress / 0.25;
+                    targetWidthVal = gsap.utils.interpolate(activeSection.defaultSize, 120, sizeBlend);
+                    targetHeightVal = gsap.utils.interpolate(activeSection.defaultSize, 120, sizeBlend);
+                    targetColor = '#161616';
+                    gazeOpacity = 1;
+                    gazeScale = 1;
+                } else {
+                    targetWidthVal = 120;
+                    targetHeightVal = 120;
+                    targetColor = '#161616';
+                    const zoomProgress = (progress - 0.25) / 0.75;
+                    gazeScale = 1 + zoomProgress * 115;
+                    gazeOpacity = Math.max(0, 1 - zoomProgress * 1.5);
+                }
+            }
+
+            targetX += (targetXVal - targetX) * 0.12;
+            targetY += (targetYVal - targetY) * 0.12;
+            targetWidth += (targetWidthVal - targetWidth) * 0.12;
+            targetHeight += (targetHeightVal - targetHeight) * 0.12;
+
+            const currentVelocity = Math.abs(velocityStretch);
+            const stretchY = 1 + Math.min(0.55, currentVelocity * 0.03);
+            const stretchX = 1 - Math.min(0.28, currentVelocity * 0.015);
+
+            scaleX += (stretchX - scaleX) * 0.12;
+            scaleY += (stretchY - scaleY) * 0.12;
+            velocityStretch *= 0.88;
+
+            gsap.set(gazeCircle, {
+                x: targetX,
+                y: targetY,
+                width: targetWidth,
+                height: targetHeight,
+                scaleX: scaleX * gazeScale,
+                scaleY: scaleY * gazeScale,
+                opacity: gazeOpacity,
+                backgroundColor: targetColor,
+                force3D: true
+            });
+
+            requestAnimationFrame(renderGazeCircle);
+        }
+        requestAnimationFrame(renderGazeCircle);
+
+        const hoverContainer = document.getElementById('brand-hover-container');
+        const hoverImg = document.getElementById('brand-hover-img');
+        const brandRows = document.querySelectorAll('.brand-row');
+
+        let mouseX = 0, mouseY = 0;
+        let currentX = 0, currentY = 0;
+        let isHovered = false;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        gsap.ticker.add(() => {
+            if (isHovered && hoverContainer) {
+                currentX += (mouseX - currentX) * 0.08;
+                currentY += (mouseY - currentY) * 0.08;
+                gsap.set(hoverContainer, {
+                    x: currentX + 25,
+                    y: currentY - 110,
+                    force3D: true
+                });
+            }
+        });
+
+        brandRows.forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                const imgUrl = row.getAttribute('data-hover-img');
+                if (!imgUrl || !hoverContainer) return;
+                isHovered = true;
+                const fallbackUrl = row.getAttribute('data-fallback');
+                hoverImg.src = imgUrl;
+                hoverImg.onerror = () => { hoverImg.src = fallbackUrl; };
+                
+                hoverContainer.style.opacity = '1';
+                gsap.killTweensOf(hoverContainer);
+                gsap.fromTo(hoverImg, { scale: 1.15 }, { scale: 1.0, duration: 0.8, ease: "power3.out" });
+                gsap.to(hoverContainer, { scale: 1, duration: 0.5, ease: "power3.out" });
+            });
+
+            row.addEventListener('mouseleave', () => {
+                if (!hoverContainer) return;
+                isHovered = false;
+                gsap.killTweensOf(hoverContainer);
+                gsap.to(hoverContainer, {
+                    scale: 0.6,
+                    duration: 0.4,
+                    ease: "power3.in",
+                    onComplete: () => { if(!isHovered) hoverContainer.style.opacity = '0'; }
+                });
+            });
+        });
+
+        gsap.to(".asterisk-spin", {
+            rotation: 720,
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#brands",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-notification');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = message;
+            
+            gsap.killTweensOf(toast);
+            gsap.timeline()
+                .to(toast, { y: 0, opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: "back.out(1.7)" })
+                .to(toast, { y: 24, opacity: 0, pointerEvents: 'none', duration: 0.5, ease: "power3.in" }, "+=2.2");
+        }
+
+        // 高反馈金句点击复制
+        const clickEmail = document.getElementById('click-email');
+        if (clickEmail) {
+            clickEmail.addEventListener('click', () => {
+                const textToCopy = clickEmail.textContent.trim();
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = textToCopy;
+                tempTextArea.style.position = 'fixed';
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('✨ 愿你终生拥抱满分的安全感与配得感！已复制金句');
+                } catch (err) {
+                    showToast('⚠️ 复制失败，请手动长按复制');
+                }
+                document.body.removeChild(tempTextArea);
+            });
+        }
+
+        // 独家微信添加复制交互实现
+        const clickWechatCard = document.getElementById('wechat-trigger-card');
+        const wechatIdElement = document.getElementById('click-wechat');
+        if (clickWechatCard && wechatIdElement) {
+            clickWechatCard.addEventListener('click', () => {
+                const wechatText = wechatIdElement.textContent.trim();
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = wechatText;
+                tempTextArea.style.position = 'fixed';
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('🟢 微信 ID 成功复制，去微信添加吧！');
+                } catch (err) {
+                    showToast('⚠️ 复制失败，请手动长按复制 ' + wechatText);
+                }
+                document.body.removeChild(tempTextArea);
+            });
+        }
+
+        const stickers = document.querySelectorAll('.physics-sticker');
+        const friction = 0.95;
+        const bounce = 0.75;
+        let highestZ = 200;
+        const stickerStates = [];
+
+        let isContactInView = false;
+        ScrollTrigger.create({
+            trigger: "#contact-wrapper",
+            start: "top bottom",
+            end: "bottom top",
+            onToggle: self => isContactInView = self.isActive
+        });
+
+        if (stickers && stickers.length > 0) {
+            stickers.forEach((sticker, index) => {
+                const initialRotation = -15 + (Math.random() * 30);
+                const rect = sticker.getBoundingClientRect();
+                
+                let width = rect.width || 130;
+                let height = rect.height || 48;
+
+                const state = {
+                    element: sticker,
+                    x: 0,
+                    y: 0,
+                    vx: 0,
+                    vy: 0,
+                    width: width,
+                    height: height,
+                    rotation: initialRotation,
+                    vr: 0,
+                    isDragging: false,
+                    lastMouseX: 0,
+                    lastMouseY: 0,
+                    mouseOffsetX: 0,
+                    mouseOffsetY: 0,
+                    weight: parseFloat(sticker.getAttribute('data-weight')) || 1.0
+                };
+
+                stickerStates.push(state);
+
+                sticker.addEventListener('mousedown', (e) => startStickerDrag(e, state));
+                sticker.addEventListener('touchstart', (e) => startStickerDrag(e, state), { passive: false });
+            });
+        }
+
+        function initStickers() {
+            const container = document.getElementById('contact-wrapper');
+            const rect = container.getBoundingClientRect();
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            stickerStates.forEach((state, index) => {
+                state.x = (w * 0.15) + (Math.random() * (w * 0.6)) - (state.width / 2);
+                state.y = (h * 0.35) + (Math.random() * (h * 0.4)) - (state.height / 2);
+                state.vx = 0;
+                state.vy = 0;
+                state.vr = 0;
+
+                gsap.set(state.element, {
+                    x: state.x,
+                    y: state.y,
+                    rotation: state.rotation,
+                    zIndex: index + 100
+                });
+            });
+        }
+
+        function startStickerDrag(e, state) {
+            state.isDragging = true;
+            highestZ += 1;
+            state.element.style.zIndex = highestZ;
+            lenis.stop();
+
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+            state.mouseOffsetX = clientX - state.x;
+            state.mouseOffsetY = clientY - state.y;
+
+            state.lastMouseX = clientX;
+            state.lastMouseY = clientY;
+            state.vx = 0;
+            state.vy = 0;
+            state.vr = 0;
+
+            if (e.cancelable) e.preventDefault();
+            if (e.stopPropagation) e.stopPropagation();
+        }
+
+        window.addEventListener('mousemove', handleGlobalStickerMove);
+        window.addEventListener('touchmove', handleGlobalStickerMove, { passive: false });
+
+        function handleGlobalStickerMove(e) {
+            let draggedAny = false;
+            stickerStates.forEach(state => {
+                if (!state.isDragging) return;
+                draggedAny = true;
+
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                state.x = clientX - state.mouseOffsetX;
+                state.y = clientY - state.mouseOffsetY;
+
+                state.vx = (clientX - state.lastMouseX) * (0.5 / state.weight);
+                state.vy = (clientY - state.lastMouseY) * (0.5 / state.weight);
+                state.vr = state.vx * 0.12;
+
+                state.lastMouseX = clientX;
+                state.lastMouseY = clientY;
+
+                gsap.set(state.element, {
+                    x: state.x,
+                    y: state.y,
+                    rotation: state.rotation + state.vx * 0.5
+                });
+            });
+
+            if (draggedAny) {
+                if (e.cancelable) e.preventDefault();
+            }
+        }
+
+        window.addEventListener('mouseup', releaseStickers);
+        window.addEventListener('touchend', releaseStickers);
+
+        function releaseStickers() {
+            let releasedAny = false;
+            stickerStates.forEach(state => {
+                if (state.isDragging) {
+                    state.isDragging = false;
+                    releasedAny = true;
+                }
+            });
+            if (releasedAny) {
+                lenis.start();
+            }
+        }
+
+        function updatePhysicsLoop() {
+            if (!isContactInView) {
+                requestAnimationFrame(updatePhysicsLoop);
+                return;
+            }
+
+            const containerWidth = window.innerWidth;
+            const containerHeight = window.innerHeight;
+
+            stickerStates.forEach(state => {
+                if (state.isDragging) return;
+
+                state.x += state.vx;
+                state.y += state.vy;
+                state.rotation += state.vr;
+
+                state.vx *= friction;
+                state.vy *= friction;
+                state.vr *= friction;
+
+                if (state.x < 12) {
+                    state.x = 12;
+                    state.vx = -state.vx * bounce;
+                    state.vr = -state.vr * bounce;
+                }
+                if (state.x + state.width > containerWidth - 12) {
+                    state.x = containerWidth - state.width - 12;
+                    state.vx = -state.vx * bounce;
+                    state.vr = -state.vr * bounce;
+                }
+                if (state.y < 12) {
+                    state.y = 12;
+                    state.vy = -state.vy * bounce;
+                }
+                if (state.y + state.height > containerHeight - 12) {
+                    state.y = containerHeight - state.height - 12;
+                    state.vy = -state.vy * bounce;
+                    state.vr = -state.vr * bounce;
+                }
+
+                gsap.set(state.element, {
+                    x: state.x,
+                    y: state.y,
+                    rotation: state.rotation
+                });
+            });
+
+            requestAnimationFrame(updatePhysicsLoop);
+        }
+        requestAnimationFrame(updatePhysicsLoop);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 在 DOM 就绪时触发首屏文字淡入，无需等待庞大的图片资源完成加载，彻底消除首屏缺失与白屏
+            gsap.to(".hero-line", {
+                y: 0,
+                duration: 1.4,
+                stagger: 0.12,
+                ease: "power4.out"
+            });
+            
+            initStickers();
+        });
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                stickerStates.forEach(state => {
+                    const rect = state.element.getBoundingClientRect();
+                    state.width = rect.width || state.width;
+                    state.height = rect.height || state.height;
+                });
+                initStickers();
+                ScrollTrigger.refresh();
+            }, 150);
+        });
+
+        window.addEventListener('load', () => {
+            ScrollTrigger.refresh();
+            initStickers();
+        });
+    </script>
+</body>
+</html>
