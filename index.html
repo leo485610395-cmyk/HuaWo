@@ -1,8 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>化我 — AI 智能体探索者 & 破界青年</title>
     
     <!-- Tailwind CSS 核心 CDN -->
@@ -87,6 +87,40 @@
             background: #111;
         }
 
+        /* 移动端：brand 预览改为居中模态（点击展开 / 点击空白关闭） */
+        @media (pointer: coarse), (max-width: 767px) {
+            #brand-hover-container.is-mobile-open {
+                pointer-events: auto;
+                /* 居中并适配屏幕，留出边距 */
+                width: min(86vw, 380px);
+                height: min(60vh, 460px);
+                top: 50%;
+                left: 50%;
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                border-radius: 20px;
+                z-index: 130;
+            }
+            /* 半透明遮罩，点击关闭 */
+            #brand-mobile-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(14,14,14,0.55);
+                z-index: 120;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.4s ease;
+            }
+            #brand-mobile-backdrop.is-open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #brand-mobile-backdrop { display: none; }
+        @media (pointer: coarse), (max-width: 767px) {
+            #brand-mobile-backdrop { display: block; }
+        }
+
         .physics-sticker {
             position: absolute;
             user-select: none;
@@ -142,6 +176,8 @@
     <div id="brand-hover-container">
         <img id="brand-hover-img" src="" class="w-full h-full object-cover" alt="核心盟友卡片">
     </div>
+    <!-- 移动端 brand 预览遮罩（点击关闭） -->
+    <div id="brand-mobile-backdrop"></div>
 
     <!-- 法式极简高定复制成功的 Toast 提示盒 -->
     <div id="toast-notification" class="fixed bottom-8 right-8 z-[200] bg-[#161616] text-white border border-brand-accent px-6 py-4 rounded-xl flex items-center gap-3 shadow-2xl transform translate-y-24 opacity-0 pointer-events-none transition-all duration-500">
@@ -180,20 +216,21 @@
                 
                 <div class="flex justify-between items-center text-[10px] tracking-widest text-brand-bg/40 uppercase font-mono">
                     <span>№ 26 NO-DERISION ENERGY FIELD</span>
-                    <span>MOVE MOUSE TO ALIGN / 移动鼠标校准频率</span>
+                    <span class="hidden md:inline">MOVE MOUSE TO ALIGN / 移动鼠标校准频率</span>
+                    <span class="md:hidden">TOUCH / TILT TO ALIGN / 触摸或倾斜校准</span>
                 </div>
 
                 <!-- 优化后的高交互“引力 Hub” -->
-                <div id="interaction-hub" class="relative w-full h-[55vh] flex items-center justify-center cursor-pointer group" onclick="lenis.scrollTo('#hero-section')">
+                <div id="interaction-hub" class="relative w-full h-[55vh] flex items-center justify-center cursor-pointer group" onclick="onHubClick()">
                     
-                    <!-- 外层精密旋转坐标环 -->
-                    <div class="absolute w-[300px] h-[300px] rounded-full border border-white/[0.05] flex items-center justify-center animate-[spin_20s_linear_infinite]">
+                    <!-- 外层精密旋转坐标环（自适应尺寸，避免窄屏溢出） -->
+                    <div class="absolute w-[min(300px,80vw)] h-[min(300px,80vw)] rounded-full border border-white/[0.05] flex items-center justify-center animate-[spin_20s_linear_infinite]">
                         <div class="w-full h-[1px] bg-white/[0.05]"></div>
                         <div class="absolute w-[1px] h-full bg-white/[0.05]"></div>
                     </div>
-                    
+
                     <!-- 旋转文字环 -->
-                    <svg class="absolute w-[240px] h-[240px] rotating-stamp-text opacity-50 group-hover:opacity-100 transition-opacity duration-500" viewBox="0 0 100 100">
+                    <svg class="absolute w-[min(240px,64vw)] h-[min(240px,64vw)] rotating-stamp-text opacity-50 group-hover:opacity-100 transition-opacity duration-500" viewBox="0 0 100 100">
                         <path id="hubTextPath" fill="none" d="M 50 50 m -40,0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0" />
                         <text class="font-mono text-[5px] uppercase tracking-[0.5em] fill-white font-bold">
                             <textPath href="#hubTextPath" startOffset="0%">✦ SYSTEM CALIBRATION ACTIVE ✦ READY TO CONNECT ✦</textPath>
@@ -212,7 +249,8 @@
                 </div>
 
                 <div class="max-w-xl mx-auto text-center text-[10px] tracking-widest text-brand-bg/50 uppercase font-mono leading-relaxed">
-                    移动鼠标以进行系统校准，点击以接入。
+                    <span class="hidden md:inline">移动鼠标以进行系统校准，点击以接入。</span>
+                    <span class="md:hidden">触摸或倾斜手机以进行系统校准，点击以接入。</span>
                 </div>
             </div>
         </section>
@@ -287,156 +325,139 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-y-32 md:gap-x-12">
                     
-                    <!-- 卡片 01: AI 智能体体系 -->
+                    <!-- 卡片 01: AI 智能体体系（纯文字排版卡） -->
                     <div class="md:col-span-7 flex flex-col group cursor-pointer">
-                        <div class="relative overflow-hidden aspect-[16/10] bg-neutral-900 border border-white/10 rounded-xl p-8 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                        <div class="relative overflow-hidden aspect-[16/10] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-12 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                            <!-- 顶栏：标签 + 版本码（统一语法） -->
                             <div class="flex justify-between items-start">
-                                <span class="font-mono text-xs text-brand-accent">✦ ARCHITECTURE</span>
-                                <span class="font-mono text-[10px] text-white/40">v2.60</span>
+                                <span class="font-mono text-[10px] md:text-xs text-brand-accent tracking-widest uppercase">✦ ARCHITECTURE</span>
+                                <span class="font-mono text-[10px] text-white/40 tracking-widest">v2.60</span>
                             </div>
-                            
-                            <!-- 动态交互式 AI 终端控制台 -->
-                            <div class="my-auto w-full h-[45%] rounded-lg border border-white/10 bg-black/40 p-4 font-mono text-[10px] text-emerald-400/90 overflow-hidden relative flex flex-col justify-between group-hover:border-emerald-500/30 transition-all duration-500 shadow-inner">
-                                <div class="flex items-center gap-1.5 border-b border-white/5 pb-2 mb-2 text-white/30 text-[8px] uppercase tracking-widest">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500/60"></span>
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500/60"></span>
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/60"></span>
-                                    <span class="ml-2 font-bold text-white/40">agent_runtime_core.sh</span>
-                                </div>
-                                <div class="flex-1 space-y-1.5 leading-normal text-white/50">
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-brand-accent">✦</span>
-                                        <span>deploy_ai_agents --optimize --leverage</span>
-                                    </div>
-                                    <div class="text-emerald-400 flex items-center gap-1">
-                                        <span>[SUCCESS]</span>
-                                        <span class="text-white/40">Task automations successfully wired.</span>
-                                    </div>
-                                    <div class="text-white/30">
-                                        &gt;&gt; Loading Claude Code workflow matrix...
-                                    </div>
-                                    <div class="text-brand-accent/80 flex items-center gap-1 font-bold">
-                                        <span>[OPC ALLY]</span>
-                                        <span>System idle. Efficiency multiplier: 8.5x</span>
-                                    </div>
-                                </div>
-                                <div class="absolute bottom-2 right-4 flex items-center gap-1 text-white/20 text-[8px] tracking-widest font-bold uppercase">
-                                    <span>ACTIVE PROCESS</span>
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+
+                            <!-- 主体：巨型空心序号 + 衬线主标，纯排版无插画 -->
+                            <div class="my-auto flex items-center gap-6 md:gap-10">
+                                <span class="stroke-text font-display font-extrabold text-[22vw] md:text-[10rem] leading-none select-none -ml-2 md:-ml-4 transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">01</span>
+                                <div class="flex flex-col gap-3">
+                                    <span class="font-mono text-[10px] md:text-xs text-white/40 tracking-[0.3em] uppercase">AI AGENT STACK</span>
+                                    <h3 class="font-serif text-2xl md:text-4xl text-white leading-tight">生产力<br>实装</h3>
+                                    <div class="w-10 h-px bg-brand-accent/60 mt-1"></div>
                                 </div>
                             </div>
 
-                            <div class="font-display font-extrabold text-2xl uppercase tracking-tight">AI Agent 生产力实装</div>
+                            <!-- 底栏：主标英文 + 一句话 -->
+                            <div class="flex items-end justify-between gap-4">
+                                <span class="font-display font-extrabold text-sm md:text-lg uppercase tracking-tight text-white">AI Agent 生产力实装</span>
+                                <span class="font-mono text-[9px] md:text-[10px] text-white/30 tracking-widest uppercase whitespace-nowrap">8.5× OUTPUT</span>
+                            </div>
                         </div>
                         <div class="flex justify-between items-start mt-6">
                             <div>
-                                <h3 class="text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">01 / AI 前沿实战装配</h3>
-                                <p class="text-xs text-brand-gray mt-1">手把手部署先进 Agent 场景（如 NEWMAX AI、Claude Code、自动化流），用技术解放机械化劳动。</p>
+                                <h3 class="text-base md:text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">01 / AI 前沿实战装配</h3>
+                                <p class="text-xs md:text-sm text-brand-gray mt-2 leading-relaxed max-w-md">手把手部署先进 Agent 场景（NEWMAX AI、Claude Code、自动化流），用技术解放机械化劳动。</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 卡片 02: 综测学神心法 -->
+                    <!-- 卡片 02: 综测学神心法（纯文字排版卡） -->
                     <div class="md:col-span-5 md:mt-24 flex flex-col group cursor-pointer">
-                        <div class="relative overflow-hidden aspect-[4/5] bg-neutral-900 border border-white/10 rounded-xl p-8 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                        <div class="relative overflow-hidden aspect-[4/5] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-10 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                            <!-- 顶栏 -->
                             <div class="flex justify-between items-start">
-                                <span class="font-mono text-xs text-brand-accent">✦ METHODOLOGY</span>
-                                <span class="font-mono text-[10px] text-white/40">MATRIX</span>
+                                <span class="font-mono text-[10px] md:text-xs text-brand-accent tracking-widest uppercase">✦ METHODOLOGY</span>
+                                <span class="font-mono text-[10px] text-white/40 tracking-widest">MATRIX</span>
                             </div>
-                            
-                            <!-- 精算师物理杠杆倍增模型 (带有悬停微翘动画) -->
-                            <div class="my-auto w-full h-[50%] flex items-center justify-center relative overflow-hidden">
-                                <svg class="w-11/12 h-full opacity-60 text-white transition-transform duration-700 group-hover:scale-105" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <!-- 刻度线 -->
-                                    <line x1="20" y1="90" x2="180" y2="90" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.3"/>
-                                    <!-- 杠杆支点 -->
-                                    <polygon points="60,90 53,105 67,105" stroke="#C5A880" stroke-width="1.2" fill="#0E0E0E"/>
-                                    
-                                    <!-- 杠杆横梁 (带有悬停微翘动画) -->
-                                    <g class="lever-beam origin-[60px_90px] transition-transform duration-500 group-hover:rotate-[-6deg]">
-                                        <!-- 杠杆主梁 -->
-                                        <line x1="15" y1="90" x2="185" y2="90" stroke="currentColor" stroke-width="2"/>
-                                        
-                                        <!-- 左侧：微小付出 (Effort Point) -->
-                                        <circle cx="30" cy="80" r="4" fill="#C5A880"/>
-                                        <line x1="30" y1="80" x2="30" y2="90" stroke="#C5A880" stroke-width="1"/>
-                                        <text x="30" y="68" class="font-mono text-[7px] text-center fill-[#C5A880]/80" text-anchor="middle" font-weight="bold">EFFORT (1x)</text>
 
-                                        <!-- 右侧：巨大综测回报 (Leveraged Value) -->
-                                        <rect x="135" y="55" width="30" height="30" rx="3" fill="currentColor" stroke="#0E0E0E" stroke-width="1" opacity="0.8"/>
-                                        <line x1="150" y1="85" x2="150" y2="90" stroke="currentColor" stroke-width="1"/>
-                                        <text x="150" y="44" class="font-mono text-[8px] fill-white" text-anchor="middle" font-weight="bold">VALUE (10x)</text>
-                                        <!-- 杠杆力臂标记线 -->
-                                        <path d="M60,78 L150,78" stroke="currentColor" stroke-width="0.5" stroke-dasharray="1 1"/>
-                                        <text x="105" y="73" class="font-mono text-[6px] fill-white/40" text-anchor="middle">LEVERAGE ARM (4x Length)</text>
-                                    </g>
-                                </svg>
+                            <!-- 主体：纵向排版，序号在上、主标在下 -->
+                            <div class="my-auto flex flex-col gap-6">
+                                <span class="stroke-text font-display font-extrabold text-[26vw] md:text-[11rem] leading-[0.8] select-none transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">02</span>
+                                <div class="flex flex-col gap-3">
+                                    <span class="font-mono text-[10px] md:text-xs text-white/40 tracking-[0.3em] uppercase">LEVERAGE MODEL</span>
+                                    <h3 class="font-serif text-2xl md:text-3xl text-white leading-tight">降维<br>加分体系</h3>
+                                    <div class="w-10 h-px bg-brand-accent/60 mt-1"></div>
+                                </div>
                             </div>
-                            
-                            <div class="font-display font-extrabold text-2xl uppercase tracking-tight">综测降维加分体系</div>
+
+                            <!-- 底栏：用 1× → 10× 的纯文字对比表达杠杆，替代插画 -->
+                            <div class="flex items-end justify-between">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-mono text-xs text-white/40">1×</span>
+                                    <span class="text-brand-accent">→</span>
+                                    <span class="font-display font-extrabold text-2xl text-brand-accent">10×</span>
+                                </div>
+                                <span class="font-display font-extrabold text-sm md:text-lg uppercase tracking-tight text-white">综测降维加分体系</span>
+                            </div>
                         </div>
                         <div class="flex justify-between items-start mt-6">
                             <div>
-                                <h3 class="text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">02 / 综测加分最速路径</h3>
-                                <p class="text-xs text-brand-gray mt-1">精算师逻辑：只做加分最有效、杠杆最大的事件。排除无效努力，实现效率最大化。</p>
+                                <h3 class="text-base md:text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">02 / 综测加分最速路径</h3>
+                                <p class="text-xs md:text-sm text-brand-gray mt-2 leading-relaxed">精算师逻辑：只做加分最有效、杠杆最大的事件。排除无效努力，实现效率最大化。</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 卡片 03: 竞赛经验全景 -->
+                    <!-- 卡片 03: 竞赛经验全景（纯文字排版卡，保留四阶段信息） -->
                     <div class="md:col-span-12 mt-12 flex flex-col group cursor-pointer">
-                        <div class="relative overflow-hidden aspect-[21/9] bg-neutral-900 border border-white/10 rounded-xl p-8 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                        <div class="relative overflow-hidden aspect-[16/9] md:aspect-[21/9] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-12 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                            <!-- 顶栏 -->
                             <div class="flex justify-between items-start">
-                                <span class="font-mono text-xs text-brand-accent">✦ INITIATION</span>
-                                <span class="font-mono text-[10px] text-white/40">PROVINCIAL</span>
-                            </div>
-                            
-                            <!-- 省级大创培育与商业闭环全景流程 -->
-                            <div class="my-auto w-full h-[40%] flex items-center justify-center py-4">
-                                <svg class="w-full h-full opacity-50 text-white" viewBox="0 0 800 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <!-- 贯穿连接主线 -->
-                                    <line x1="50" y1="50" x2="750" y2="50" stroke="currentColor" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.3"/>
-                                    
-                                    <!-- 节点 1: 痛点洞察 -->
-                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
-                                        <circle cx="100" cy="50" r="6" fill="#0E0E0E" stroke="currentColor" stroke-width="1.5"/>
-                                        <circle cx="100" cy="50" r="2" fill="currentColor"/>
-                                        <text x="100" y="32" class="font-sans text-[10px] fill-white/40" text-anchor="middle">STEP 01</text>
-                                        <text x="100" y="75" class="font-sans text-[11px] font-bold fill-white" text-anchor="middle">痛点与商业选题</text>
-                                    </g>
-
-                                    <!-- 节点 2: 申报书打磨 (Highlighted Provincial Peak) -->
-                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
-                                        <circle cx="320" cy="50" r="8" fill="#0E0E0E" stroke="#C5A880" stroke-width="2"/>
-                                        <circle cx="320" cy="50" r="3" class="animate-pulse" fill="#C5A880"/>
-                                        <text x="320" y="30" class="font-mono text-[9px] fill-brand-accent" text-anchor="middle" font-weight="bold">PROVINCIAL 立项</text>
-                                        <text x="320" y="75" class="font-sans text-[11px] font-bold fill-brand-accent" text-anchor="middle">申报书精算打磨</text>
-                                    </g>
-
-                                    <!-- 节点 3: 团队与商业合伙 -->
-                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
-                                        <circle cx="540" cy="50" r="6" fill="#0E0E0E" stroke="currentColor" stroke-width="1.5"/>
-                                        <circle cx="540" cy="50" r="2" fill="currentColor"/>
-                                        <text x="540" y="32" class="font-sans text-[10px] fill-white/40" text-anchor="middle">STEP 03</text>
-                                        <text x="540" y="75" class="font-sans text-[11px] font-bold fill-white" text-anchor="middle">跨学科团队建组</text>
-                                    </g>
-
-                                    <!-- 节点 4: 闭环验证落地 -->
-                                    <g class="transition-transform duration-300 hover:translate-y-[-2px] cursor-pointer">
-                                        <circle cx="700" cy="50" r="6" fill="#0E0E0E" stroke="currentColor" stroke-width="1.5"/>
-                                        <circle cx="700" cy="50" r="2" fill="currentColor"/>
-                                        <text x="700" y="32" class="font-sans text-[10px] fill-white/40" text-anchor="middle">STEP 04</text>
-                                        <text x="700" y="75" class="font-sans text-[11px] font-bold fill-white" text-anchor="middle">商业闭环跑通</text>
-                                    </g>
-                                </svg>
+                                <span class="font-mono text-[10px] md:text-xs text-brand-accent tracking-widest uppercase">✦ INITIATION</span>
+                                <span class="font-mono text-[10px] text-white/40 tracking-widest">PROVINCIAL</span>
                             </div>
 
-                            <div class="font-display font-extrabold text-2xl uppercase tracking-tight">大创项目书与竞赛方法论</div>
+                            <!-- 主体：左侧序号+主标，右侧四阶段列表 -->
+                            <div class="my-auto grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
+                                <!-- 左：序号 + 主标 -->
+                                <div class="md:col-span-5 flex items-center gap-6">
+                                    <span class="stroke-text font-display font-extrabold text-[22vw] md:text-[9rem] leading-none select-none -ml-2 md:-ml-4 transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">03</span>
+                                    <div class="flex flex-col gap-3">
+                                        <span class="font-mono text-[10px] md:text-xs text-white/40 tracking-[0.3em] uppercase">PROVINCIAL LOOP</span>
+                                        <h3 class="font-serif text-2xl md:text-4xl text-white leading-tight">大创<br>蓝图落地</h3>
+                                        <div class="w-10 h-px bg-brand-accent/60 mt-1"></div>
+                                    </div>
+                                </div>
+                                <!-- 右：四阶段（原流程节点的信息，改用文字纵向列表） -->
+                                <div class="md:col-span-7 grid grid-cols-2 gap-x-8 gap-y-5">
+                                    <div class="flex items-baseline gap-3">
+                                        <span class="font-mono text-[10px] text-white/30 tracking-widest">01</span>
+                                        <div>
+                                            <div class="text-white text-sm md:text-base font-bold">痛点与商业选题</div>
+                                            <div class="text-white/40 text-[10px] md:text-xs mt-0.5">STEP 01</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-baseline gap-3">
+                                        <span class="font-mono text-[10px] text-brand-accent tracking-widest">02</span>
+                                        <div>
+                                            <div class="text-brand-accent text-sm md:text-base font-bold flex items-center gap-2">申报书精算打磨 <span class="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse"></span></div>
+                                            <div class="text-brand-accent/50 text-[10px] md:text-xs mt-0.5">PROVINCIAL 立项</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-baseline gap-3">
+                                        <span class="font-mono text-[10px] text-white/30 tracking-widest">03</span>
+                                        <div>
+                                            <div class="text-white text-sm md:text-base font-bold">跨学科团队建组</div>
+                                            <div class="text-white/40 text-[10px] md:text-xs mt-0.5">STEP 03</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-baseline gap-3">
+                                        <span class="font-mono text-[10px] text-white/30 tracking-widest">04</span>
+                                        <div>
+                                            <div class="text-white text-sm md:text-base font-bold">商业闭环跑通</div>
+                                            <div class="text-white/40 text-[10px] md:text-xs mt-0.5">STEP 04</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 底栏 -->
+                            <div class="flex items-end justify-between gap-4">
+                                <span class="font-display font-extrabold text-sm md:text-lg uppercase tracking-tight text-white">大创项目书与竞赛方法论</span>
+                                <span class="font-mono text-[9px] md:text-[10px] text-white/30 tracking-widest uppercase whitespace-nowrap">END-TO-END LOOP</span>
+                            </div>
                         </div>
                         <div class="flex justify-between items-start mt-6">
                             <div>
-                                <h3 class="text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">03 / 竞赛与大创蓝图落地</h3>
-                                <p class="text-xs text-brand-gray mt-1">省级大创立项负责人的第一手干货：从选题、申报书打磨、团队组建、到商业闭环构建的一站式复盘经验。</p>
+                                <h3 class="text-base md:text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">03 / 竞赛与大创蓝图落地</h3>
+                                <p class="text-xs md:text-sm text-brand-gray mt-2 leading-relaxed max-w-2xl">省级大创立项负责人的第一手干货：从选题、申报书打磨、团队组建、到商业闭环构建的一站式复盘经验。</p>
                             </div>
                         </div>
                     </div>
@@ -497,8 +518,8 @@
         <section id="brands" class="py-32 px-6 md:px-12 bg-brand-bg text-brand-dark relative border-b border-brand-dark/10">
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
                 
-                <!-- 左侧固定信息栏 -->
-                <div class="lg:col-span-4 flex flex-col justify-between h-auto lg:h-[450px] sticky top-32">
+                <!-- 左侧固定信息栏：桌面端 sticky 吸顶，移动端改为普通流式块避免与风琴重叠 -->
+                <div class="lg:col-span-4 flex flex-col lg:justify-between h-auto lg:h-[450px] static lg:sticky lg:top-32">
                     <div class="relative">
                         <div class="w-8 h-8 mb-6 relative">
                             <div id="anchor-brands" class="w-6 h-6 rounded-full border-2 border-brand-dark"></div>
@@ -766,7 +787,18 @@
             </div>
         </section>
 
-        <section id="contact-wrapper" class="relative h-screen bg-brand-bg overflow-hidden">
+        <!--
+            联系区：
+            桌面端由 GSAP pin 锁一屏，高度用 dvh 避免移动端地址栏跳变；
+            移动端取消 pin，需要略高于一屏以提供滚动触发空间。
+        -->
+        <section id="contact-wrapper" class="relative bg-brand-bg overflow-hidden min-h-[100svh]"
+                 style="height: 100dvh;">
+            <style>
+                @media (pointer: coarse), (max-width: 767px) {
+                    #contact-wrapper { height: 140vh !important; }
+                }
+            </style>
             
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 pointer-events-none z-20">
                 <div id="anchor-portal-start" class="w-full h-full rounded-full"></div>
@@ -930,6 +962,85 @@
         }
         requestAnimationFrame(raf);
 
+        // ============================================================
+        // 统一指针 / 指向源（鼠标 / 触摸 / 重力）
+        // 移动端无鼠标移动事件，用触摸 + 设备方向（重力感应）补齐。
+        // unifiedPointer.x / .y 始终是一份"当前指向点"，鼠标动效改读它即可。
+        // ============================================================
+        const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+
+        const unifiedPointer = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            active: false,
+            tilt: { x: 0, y: 0, active: false }
+        };
+
+        // 鼠标（桌面端）
+        window.addEventListener('mousemove', (e) => {
+            unifiedPointer.x = e.clientX;
+            unifiedPointer.y = e.clientY;
+            unifiedPointer.active = true;
+        });
+
+        // 触摸（移动端：手指即指针）
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches && e.touches.length > 0) {
+                unifiedPointer.x = e.touches[0].clientX;
+                unifiedPointer.y = e.touches[0].clientY;
+                unifiedPointer.active = true;
+            }
+        }, { passive: true });
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches.length > 0) {
+                unifiedPointer.x = e.touches[0].clientX;
+                unifiedPointer.y = e.touches[0].clientY;
+                unifiedPointer.active = true;
+            }
+        }, { passive: true });
+
+        // 重力感应（移动端：无触摸时用设备倾斜模拟指针偏移）
+        function handleTilt(e) {
+            const gamma = e.gamma != null ? e.gamma : 0; // 左右倾斜 -90..90
+            const beta  = e.beta  != null ? e.beta  : 0; // 前后倾斜 -180..180
+            const offsetX = Math.max(-1, Math.min(1, gamma / 45)) * window.innerWidth * 0.18;
+            const offsetY = Math.max(-1, Math.min(1, (beta - 30) / 45)) * window.innerHeight * 0.18;
+            unifiedPointer.tilt.x = offsetX;
+            unifiedPointer.tilt.y = offsetY;
+            unifiedPointer.tilt.active = true;
+            // 没有触摸时，让指针随重力漂移
+            if (!unifiedPointer.active) {
+                unifiedPointer.x = window.innerWidth / 2 + offsetX;
+                unifiedPointer.y = window.innerHeight / 2 + offsetY;
+            }
+        }
+
+        function enableTilt() {
+            if (typeof DeviceOrientationEvent === 'undefined') return;
+            window.addEventListener('deviceorientation', handleTilt);
+        }
+
+        // 首屏 Hub 点击：iOS 13+ 需在用户手势内申请重力感应权限
+        // 定义为全局函数，供 onclick 调用
+        window.onHubClick = function() {
+            if (isMobile &&
+                typeof DeviceOrientationEvent !== 'undefined' &&
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then((state) => {
+                    if (state === 'granted') enableTilt();
+                }).catch(() => {});
+            } else if (isMobile) {
+                enableTilt();
+            }
+            lenis.scrollTo('#hero-section');
+        };
+
+        window.addEventListener('touchend', () => {
+            unifiedPointer.active = false;
+        }, { passive: true });
+
+        if (!isMobile) enableTilt();
+
         // GSAP ScrollTrigger 桥接绑定
         gsap.registerPlugin(ScrollTrigger);
         lenis.on('scroll', ScrollTrigger.update);
@@ -938,7 +1049,6 @@
         const canvas = document.getElementById('opener-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        let mouse = { x: null, y: null, targetSpeed: 1 };
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -987,23 +1097,20 @@
             particles.push(new Particle());
         }
 
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-
+        // 粒子星河的汇聚源改为统一指针（鼠标 / 触摸 / 重力），
+        // 移动端无 mousemove，统一指针已在基础设施里维护好。
         function animateStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             let speedFactor = 1.0;
-            if (mouse.x !== null) {
-                const dx = mouse.x - canvas.width / 2;
-                const dy = mouse.y - canvas.height / 2;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const maxDist = Math.min(canvas.width, canvas.height) / 2;
-                // 当鼠标向引力激活中枢聚拢时，星尘非线性加速汇聚
-                const proximity = Math.max(0, 1 - dist / maxDist);
-                speedFactor = 1.0 + Math.pow(proximity, 2.5) * 11.0;
-            }
+            const px = unifiedPointer.x;
+            const py = unifiedPointer.y;
+            const dx = px - canvas.width / 2;
+            const dy = py - canvas.height / 2;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = Math.min(canvas.width, canvas.height) / 2;
+            // 指针向引力中枢聚拢时，星尘非线性加速汇聚
+            const proximity = Math.max(0, 1 - dist / maxDist);
+            speedFactor = 1.0 + Math.pow(proximity, 2.5) * 11.0;
             particles.forEach(p => {
                 p.update(speedFactor);
                 p.draw();
@@ -1012,15 +1119,15 @@
         }
         animateStars();
 
-        // 交互 Hub 的视差跟随逻辑
+        // 交互 Hub 的视差跟随逻辑（读统一指针：鼠标 / 触摸 / 重力）
         const hub = document.getElementById('interaction-hub');
-        window.addEventListener('mousemove', (e) => {
+        gsap.ticker.add(() => {
+            if (!hub) return;
             const rect = hub.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
-            const deltaX = (e.clientX - centerX) * 0.05;
-            const deltaY = (e.clientY - centerY) * 0.05;
-
+            const deltaX = (unifiedPointer.x - centerX) * 0.05;
+            const deltaY = (unifiedPointer.y - centerY) * 0.05;
             gsap.to(hub, {
                 x: deltaX,
                 y: deltaY,
@@ -1030,14 +1137,15 @@
         });
 
         // 场景 1: 滚出开屏的视差收起
+        // 桌面端：pin + scrub 视差收起；移动端：禁用 pin，普通滚动淡出。
         const openerTl = gsap.timeline({
             scrollTrigger: {
                 trigger: "#interactive-opener",
                 start: "top top",
-                end: "bottom top",
+                end: isMobile ? "30% top" : "bottom top",
                 scrub: 1.1,
-                pin: true,
-                pinSpacing: true
+                pin: !isMobile,
+                pinSpacing: !isMobile
             }
         });
 
@@ -1049,14 +1157,16 @@
         }, 0);
 
         // 全屏转场动画核心 Timeline (极致对位，零穿帮)
+        // 桌面端：pin + scrub 逐帧展开；
+        // 移动端：禁用 pin，但保留 scrub 滚动驱动，让转场随滚动渐进展开（不突兀）。
         const portalTl = gsap.timeline({
             scrollTrigger: {
                 trigger: "#contact-wrapper",
-                start: "top top",
-                end: "+=150%", 
-                scrub: 1.2,
-                pin: true,
-                pinSpacing: true
+                start: isMobile ? "top 75%" : "top top",
+                end: isMobile ? "bottom bottom" : "+=150%",
+                scrub: isMobile ? 1.5 : 1.2,
+                pin: !isMobile,
+                pinSpacing: !isMobile
             }
         });
 
@@ -1144,21 +1254,33 @@
             });
         });
 
-        // 动态计算高定互动字符中的箭头跟随鼠标角度
+        // 动态计算高定互动字符中的箭头跟随角度（统一指针：鼠标 / 触摸 / 重力）
+        // 改用 ticker 驱动，因为重力是连续更新、没有离散事件。
         const interactiveGlyphs = document.querySelectorAll('.interactive-glyph');
-        window.addEventListener('mousemove', (e) => {
-            interactiveGlyphs.forEach(glyph => {
-                const rect = glyph.getBoundingClientRect();
-                const glyphX = rect.left + rect.width / 2;
-                const glyphY = rect.top + rect.height / 2;
-                const angle = Math.atan2(e.clientY - glyphY, e.clientX - glyphX);
-                const angleDegrees = angle * (180 / Math.PI);
-                gsap.to(glyph.querySelector('.glyph-arrow'), {
-                    rotation: angleDegrees - 90,
-                    duration: 0.4,
-                    ease: "power2.out"
+        let lastGlyphAngle = -90;
+        gsap.ticker.add(() => {
+            if (!interactiveGlyphs || interactiveGlyphs.length === 0) return;
+            // 取第一个 glyph 作基准角，避免每个箭头各自旋转造成视觉混乱
+            const firstRect = interactiveGlyphs[0].getBoundingClientRect();
+            const glyphX = firstRect.left + firstRect.width / 2;
+            const glyphY = firstRect.top + firstRect.height / 2;
+            const angle = Math.atan2(unifiedPointer.y - glyphY, unifiedPointer.x - glyphX);
+            const angleDegrees = angle * (180 / Math.PI) - 90;
+            // 角度变化超过阈值才更新，减少不必要的 tween
+            if (Math.abs(angleDegrees - lastGlyphAngle) > 0.5) {
+                lastGlyphAngle = angleDegrees;
+                interactiveGlyphs.forEach(glyph => {
+                    const arrow = glyph.querySelector('.glyph-arrow');
+                    if (arrow) {
+                        gsap.to(arrow, {
+                            rotation: angleDegrees,
+                            duration: 0.4,
+                            ease: "power2.out",
+                            overwrite: 'auto'
+                        });
+                    }
                 });
-            });
+            }
         });
 
         const gazeCircle = document.getElementById('global-gaze-circle');
@@ -1221,7 +1343,9 @@
                 }
             }
 
-            const progress = portalTl ? portalTl.progress() : 0;
+            // 读取转场进度：优先用 timeline 的 scrollTrigger progress（pin/非 pin 都适用）
+            const portalST = portalTl && portalTl.scrollTrigger ? portalTl.scrollTrigger : null;
+            const progress = portalST ? portalST.progress : (portalTl ? portalTl.progress() : 0);
             let gazeOpacity = 1;
             let gazeScale = 1;
 
@@ -1293,6 +1417,9 @@
         });
 
         gsap.ticker.add(() => {
+            // 移动端用 CSS 类 .is-mobile-open 控制居中定位，不参与鼠标跟随，
+            // 否则 gsap.set 的 x/y 会覆盖 CSS 的 translate(-50%,-50%) 把预览框甩出视口。
+            if (isMobile) return;
             if (isHovered && hoverContainer) {
                 currentX += (mouseX - currentX) * 0.08;
                 currentY += (mouseY - currentY) * 0.08;
@@ -1304,24 +1431,42 @@
             }
         });
 
-        brandRows.forEach(row => {
-            row.addEventListener('mouseenter', () => {
-                const imgUrl = row.getAttribute('data-hover-img');
-                if (!imgUrl || !hoverContainer) return;
-                isHovered = true;
-                const fallbackUrl = row.getAttribute('data-fallback');
-                hoverImg.src = imgUrl;
-                hoverImg.onerror = () => { hoverImg.src = fallbackUrl; };
-                
+        // brand 预览：桌面端 hover，移动端 tap 展开/关闭
+        const brandBackdrop = document.getElementById('brand-mobile-backdrop');
+        let mobileOpenRow = null;
+
+        function showBrandPreview(row) {
+            const imgUrl = row.getAttribute('data-hover-img');
+            if (!imgUrl || !hoverContainer) return;
+            const fallbackUrl = row.getAttribute('data-fallback');
+            hoverImg.src = imgUrl;
+            hoverImg.onerror = () => { hoverImg.src = fallbackUrl; };
+            isHovered = true;
+
+            if (isMobile) {
+                // 清掉 gsap 残留的 transform，让 CSS 类的 translate(-50%,-50%) 居中定位生效
+                gsap.killTweensOf(hoverContainer);
+                gsap.set(hoverContainer, { clearProps: "transform" });
+                hoverContainer.classList.add('is-mobile-open');
+                if (brandBackdrop) brandBackdrop.classList.add('is-open');
+                gsap.killTweensOf(hoverImg);
+                gsap.fromTo(hoverImg, { scale: 1.15 }, { scale: 1.0, duration: 0.8, ease: "power3.out" });
+            } else {
                 hoverContainer.style.opacity = '1';
                 gsap.killTweensOf(hoverContainer);
                 gsap.fromTo(hoverImg, { scale: 1.15 }, { scale: 1.0, duration: 0.8, ease: "power3.out" });
                 gsap.to(hoverContainer, { scale: 1, duration: 0.5, ease: "power3.out" });
-            });
+            }
+        }
 
-            row.addEventListener('mouseleave', () => {
-                if (!hoverContainer) return;
-                isHovered = false;
+        function hideBrandPreview() {
+            if (!hoverContainer) return;
+            isHovered = false;
+            if (isMobile) {
+                hoverContainer.classList.remove('is-mobile-open');
+                if (brandBackdrop) brandBackdrop.classList.remove('is-open');
+                mobileOpenRow = null;
+            } else {
                 gsap.killTweensOf(hoverContainer);
                 gsap.to(hoverContainer, {
                     scale: 0.6,
@@ -1329,8 +1474,31 @@
                     ease: "power3.in",
                     onComplete: () => { if(!isHovered) hoverContainer.style.opacity = '0'; }
                 });
-            });
+            }
+        }
+
+        brandRows.forEach(row => {
+            if (!isMobile) {
+                row.addEventListener('mouseenter', () => showBrandPreview(row));
+                row.addEventListener('mouseleave', () => hideBrandPreview());
+            } else {
+                // 移动端：点击同一行切换，点击新行切换到新行
+                row.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (mobileOpenRow === row) {
+                        hideBrandPreview();
+                    } else {
+                        mobileOpenRow = row;
+                        showBrandPreview(row);
+                    }
+                });
+            }
         });
+
+        // 点击遮罩关闭
+        if (brandBackdrop) {
+            brandBackdrop.addEventListener('click', hideBrandPreview);
+        }
 
         gsap.to(".asterisk-spin", {
             rotation: 720,
