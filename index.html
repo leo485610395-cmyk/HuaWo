@@ -1435,12 +1435,25 @@
         const brandBackdrop = document.getElementById('brand-mobile-backdrop');
         let mobileOpenRow = null;
 
-        function showBrandPreview(row) {
-            const imgUrl = row.getAttribute('data-hover-img');
-            if (!imgUrl || !hoverContainer) return;
+        // 预加载每行的实际可用图片：本地图成功就用本地图，失败就缓存 fallback。
+        // 这样 hover/tap 时直接读已缓存结果，零延迟、无 onerror 时序竞争。
+        const rowImageCache = new Map(); // row -> 实际可用 URL
+        brandRows.forEach(row => {
+            const localUrl = row.getAttribute('data-hover-img');
             const fallbackUrl = row.getAttribute('data-fallback');
-            hoverImg.src = imgUrl;
-            hoverImg.onerror = () => { hoverImg.src = fallbackUrl; };
+            const probe = new Image();
+            probe.onload = () => rowImageCache.set(row, localUrl);
+            probe.onerror = () => rowImageCache.set(row, fallbackUrl);
+            probe.src = localUrl;
+            // 兜底：如果本地图一直没返回（慢），先用 fallback 占位，避免悬停时白屏
+            rowImageCache.set(row, fallbackUrl);
+        });
+
+        function showBrandPreview(row) {
+            if (!hoverContainer) return;
+            // 直接用已解析好的可用 URL，不再依赖 onerror 回调
+            const resolvedUrl = rowImageCache.get(row) || row.getAttribute('data-fallback');
+            hoverImg.src = resolvedUrl;
             isHovered = true;
 
             if (isMobile) {
