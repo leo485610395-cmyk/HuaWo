@@ -155,6 +155,33 @@
         #contact-content-panel {
             will-change: clip-path;
         }
+
+        /* 移动端：底部贴纸整体缩小，避免挤占主页面 */
+        @media (max-width: 767px), (pointer: coarse) {
+            /* 罗盘贴纸：130/125px → 80/76px（恢复上一版大小），强制无方框 */
+            #sticker-container .physics-sticker[style*="width: 130px"] { width: 80px !important; height: 80px !important; border: none !important; }
+            #sticker-container .physics-sticker[style*="width: 125px"] { width: 76px !important; height: 76px !important; border: none !important; }
+            /* 胶囊贴纸：缩小字号和内边距（仅作用于有 border 的胶囊，不碰罗盘 SVG） */
+            #sticker-container .physics-sticker[style*="width: 130px"],
+            #sticker-container .physics-sticker[style*="width: 125px"] {
+                /* 罗盘：保持无 border，去掉可能的阴影方框感 */
+            }
+        }
+
+        /* 心法锚点屏：各块进入视口时淡入上移（一次性，无每帧开销） */
+        #ethos-anchor .ethos-enter {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #ethos-anchor.is-visible .ethos-enter { opacity: 1; transform: translateY(0); }
+        #ethos-anchor.is-visible .ethos-enter:nth-of-type(2) { transition-delay: 0.1s; }
+        #ethos-anchor.is-visible .ethos-enter:nth-of-type(3) { transition-delay: 0.2s; }
+        #ethos-anchor.is-visible .ethos-enter:nth-of-type(4) { transition-delay: 0.3s; }
+        /* 尊重无障碍：减少动效偏好 */
+        @media (prefers-reduced-motion: reduce) {
+            #ethos-anchor .ethos-enter { opacity: 1 !important; transform: none !important; transition: none !important; }
+        }
     </style>
 </head>
 <body class="antialiased select-none">
@@ -185,7 +212,7 @@
         <span class="font-sans text-xs font-bold tracking-widest uppercase" id="toast-message">微信已成功复制</span>
     </div>
 
-    <header id="global-header" class="fixed top-0 left-0 w-full py-6 px-6 md:px-12 flex justify-between items-center z-50 text-brand-dark transition-colors duration-500">
+    <header id="global-header" class="fixed top-0 left-0 w-full py-6 px-6 md:px-12 flex justify-between items-center z-50 text-brand-dark transition-[color,transform] duration-500 will-change-transform">
         <div class="flex items-center gap-12">
             <a href="#" class="font-display font-extrabold text-xl tracking-tight relative group" onclick="lenis.scrollTo('#smooth-content'); return false;">
                 HW / 化我<span class="text-brand-accent">✦</span>
@@ -255,6 +282,58 @@
             </div>
         </section>
 
+        <!-- 心法锚点屏：影响力 × 尊重式应用（Day9 提炼） -->
+        <section id="ethos-anchor" class="relative bg-brand-dark text-[#F5F4F0] overflow-hidden">
+            <!-- gaze 圆环专属视觉锚点：右上角旋转金环，给小球一个"归位"位置，远离文字 -->
+            <div class="absolute top-[10%] right-[8%] md:right-[140px] pointer-events-none z-0">
+                <svg class="w-16 h-16 md:w-24 md:h-24 opacity-30 rotating-stamp-text" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" stroke="#C5A880" stroke-width="0.6" stroke-dasharray="2 3" opacity="0.5" />
+                    <path id="ethosTextPath" fill="none" d="M 50 14 A 36 36 0 1 1 49.9 14" />
+                    <text class="font-mono text-[5px] uppercase tracking-[0.4em] fill-[#C5A880]/70 font-bold">
+                        <textPath href="#ethosTextPath" startOffset="0%">&nbsp;✦ ETHOS PROTOCOL ✦ RECIPROCITY ✦</textPath>
+                    </text>
+                </svg>
+                <!-- gaze 小球吸附目标点（金环中心） -->
+                <div id="anchor-ethos" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8"></div>
+            </div>
+
+            <div class="max-w-[1200px] mx-auto w-full px-6 md:px-[120px] py-20 md:py-32 min-h-[88vh] flex flex-col justify-center relative z-10">
+
+                <!-- 章节标题（单行，克制） -->
+                <div class="mb-10 md:mb-14 ethos-enter">
+                    <div class="font-mono text-xs text-brand-accent tracking-[0.08em] uppercase">
+                        №00 / ETHOS PROTOCOL / 影响力心法
+                    </div>
+                </div>
+
+                <!-- 衬线大字宣言：唯一主角，固定档位 -->
+                <div class="ethos-enter">
+                    <h2 class="font-serif font-normal leading-[0.95] tracking-[-0.02em] text-[#F5F4F0]">
+                        <span class="block text-[40px] md:text-[80px]">越是理解人性，</span>
+                        <span class="block text-[40px] md:text-[80px]"><span class="text-brand-accent">✦</span> 越要尊重人性。</span>
+                    </h2>
+                </div>
+
+                <!-- 互惠心法：精简单块，编号 + 引言 + 一句收尾 -->
+                <div class="mt-12 md:mt-16 max-w-[680px] ethos-enter">
+                    <div class="font-mono text-xs text-brand-accent tracking-[0.08em] uppercase mb-4">№ 01 / 互惠 · RECIPROCITY</div>
+                    <p class="font-serif font-normal text-[#F5F4F0] text-lg md:text-2xl leading-[1.6]">
+                        一个人变得有多好，取决于有多少人希望你好。
+                    </p>
+                    <p class="font-sans font-light text-sm md:text-base text-[#7A7A77] leading-[1.75] mt-5">
+                        世界给予给予者，索取索取者。爱出者爱返，福往者福来——<span class="text-brand-accent">利他，就是最好的利己。</span>
+                    </p>
+                </div>
+
+                <!-- 哲学收尾（Bodoni Moda 斜体） -->
+                <div class="mt-16 md:mt-24 ethos-enter">
+                    <p class="font-serif italic font-normal text-lg md:text-xl text-[#F5F4F0] leading-[1.5]">
+                        技巧可以学，发心不能歪。
+                    </p>
+                </div>
+            </div>
+        </section>
+
         <section id="hero-section" class="min-h-screen flex flex-col justify-between pt-40 pb-16 px-6 md:px-12 relative overflow-hidden bg-brand-bg">
             <div class="my-auto">
                 <div class="mb-4 flex items-center gap-3 text-xs font-bold tracking-widest text-brand-gray">
@@ -278,15 +357,20 @@
                     </div>
                 </h1>
 
-                <!-- 恢复原图英文设计介绍 + 左右完美排版 -->
-                <div class="mt-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <p class="text-base md:text-xl text-brand-gray font-light max-w-xl leading-relaxed">
-                        我是一个喜欢 AI 的大学生，正在与先行者们一起在 OPC 破界前行。不走任何无意义的内卷套路，我渴望靠自己的极致执行力与技术杠杆，在大学期间实现真正的经济独立。
-                    </p>
-                    
-                    <!-- 恢复高端英文排版介绍栏 -->
-                    <div class="text-[10px] md:text-xs font-mono tracking-widest text-brand-gray uppercase max-w-xs leading-relaxed text-left md:text-right">
-                        CREATIVE DESIGNER & AI AGENT ARCHITECT. EXPERIMENTAL DIGITAL EXPERIENCES CRAFTED WITH PASSION, PURPOSE, AND CODE. (OPC ALLIANCE FOLIO)
+                <!-- 介绍主区（左）+ 肖像收尾（右）：视线 标题→介绍→英文→肖像 -->
+                <div class="mt-10 flex flex-col-reverse md:flex-row md:items-center gap-8 md:gap-16">
+                    <!-- 左侧主区：中文介绍 + 英文排版栏 -->
+                    <div class="flex-1 flex flex-col gap-6">
+                        <p class="text-base md:text-xl text-brand-gray font-light leading-relaxed max-w-2xl">
+                            我是一个喜欢 AI 的大学生，正在与先行者们一起在 OPC 破界前行。不走任何无意义的内卷套路，我渴望靠自己的极致执行力与技术杠杆，在大学期间实现真正的经济独立。
+                        </p>
+                        <div class="text-[10px] md:text-xs font-mono tracking-widest text-brand-gray uppercase leading-relaxed max-w-md">
+                            CREATIVE DESIGNER & AI AGENT ARCHITECT. EXPERIMENTAL DIGITAL EXPERIENCES CRAFTED WITH PASSION, PURPOSE, AND CODE. (OPC ALLIANCE FOLIO)
+                        </div>
+                    </div>
+                    <!-- 右侧：艺术高对比黑白肖像，作为视觉收束 -->
+                    <div class="w-40 h-52 md:w-52 md:h-64 rounded-2xl overflow-hidden bg-zinc-300 border border-brand-dark/15 shrink-0 shadow-xl">
+                        <img src="ai_portfolio_portrait.jpg" class="w-full h-full object-cover filter grayscale contrast-125 brightness-90 hover:grayscale-0 hover:scale-105 transition-all duration-700 ease-out" alt="化我肖像" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=500&q=80'">
                     </div>
                 </div>
             </div>
@@ -327,77 +411,131 @@
                     
                     <!-- 卡片 01: AI 智能体体系（纯文字排版卡） -->
                     <div class="md:col-span-7 flex flex-col group cursor-pointer">
-                        <div class="relative overflow-hidden aspect-[16/10] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-12 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                        <div class="relative overflow-hidden aspect-[4/5] sm:aspect-[16/10] bg-neutral-900 border border-white/10 rounded-xl p-6 sm:p-8 md:p-12 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
                             <!-- 顶栏：标签 + 版本码（统一语法） -->
                             <div class="flex justify-between items-start">
                                 <span class="font-mono text-[10px] md:text-xs text-brand-accent tracking-widest uppercase">✦ ARCHITECTURE</span>
                                 <span class="font-mono text-[10px] text-white/40 tracking-widest">v2.60</span>
                             </div>
 
-                            <!-- 主体：巨型空心序号 + 衬线主标，纯排版无插画 -->
-                            <div class="my-auto flex items-center gap-6 md:gap-10">
-                                <span class="stroke-text font-display font-extrabold text-[22vw] md:text-[10rem] leading-none select-none -ml-2 md:-ml-4 transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">01</span>
-                                <div class="flex flex-col gap-3">
+                            <!-- 主体：巨型空心序号 + 衬线主标，手机端序号缩小避免挤 -->
+                            <div class="my-auto flex items-center gap-4 sm:gap-6 md:gap-10">
+                                <span class="stroke-text font-display font-extrabold text-[16vw] sm:text-[18vw] md:text-[10rem] leading-none select-none -ml-1 sm:-ml-2 md:-ml-4 transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">01</span>
+                                <div class="flex flex-col gap-2 sm:gap-3">
                                     <span class="font-mono text-[10px] md:text-xs text-white/40 tracking-[0.3em] uppercase">AI AGENT STACK</span>
-                                    <h3 class="font-serif text-2xl md:text-4xl text-white leading-tight">生产力<br>实装</h3>
+                                    <h3 class="font-serif text-xl sm:text-2xl md:text-4xl text-white leading-tight">生产力<br>实装</h3>
                                     <div class="w-10 h-px bg-brand-accent/60 mt-1"></div>
                                 </div>
                             </div>
 
-                            <!-- 底栏：主标英文 + 一句话 -->
-                            <div class="flex items-end justify-between gap-4">
-                                <span class="font-display font-extrabold text-sm md:text-lg uppercase tracking-tight text-white">AI Agent 生产力实装</span>
-                                <span class="font-mono text-[9px] md:text-[10px] text-white/30 tracking-widest uppercase whitespace-nowrap">8.5× OUTPUT</span>
+                            <!-- 战果数据条：手机端 3 列自适应，数字缩小避免溢出 -->
+                            <div class="grid grid-cols-3 gap-2 sm:gap-4 border-t border-white/10 pt-4 sm:pt-5">
+                                <div>
+                                    <div class="font-display font-extrabold text-brand-accent text-xl sm:text-2xl md:text-3xl whitespace-nowrap">¥3000<span class="text-[10px] sm:text-xs text-brand-gray font-mono ml-1">GMV</span></div>
+                                    <div class="font-mono text-[9px] md:text-[10px] text-white/40 tracking-widest uppercase mt-1">一周获客变现</div>
+                                </div>
+                                <div>
+                                    <div class="font-display font-extrabold text-white text-xl sm:text-2xl md:text-3xl whitespace-nowrap">20<span class="text-[10px] sm:text-xs text-brand-gray font-mono ml-1">人</span></div>
+                                    <div class="font-mono text-[9px] md:text-[10px] text-white/40 tracking-widest uppercase mt-1">累计获客</div>
+                                </div>
+                                <div>
+                                    <div class="font-display font-extrabold text-white text-xl sm:text-2xl md:text-3xl whitespace-nowrap">¥600</div>
+                                    <div class="font-mono text-[9px] md:text-[10px] text-white/40 tracking-widest uppercase mt-1">实战变现</div>
+                                </div>
+                            </div>
+
+                            <!-- 底栏：主标英文 + 来源 -->
+                            <div class="flex items-end justify-between gap-3 sm:gap-4 pt-4 sm:pt-0">
+                                <span class="font-display font-extrabold text-xs sm:text-sm md:text-lg uppercase tracking-tight text-white">AI Agent 生产力实装</span>
+                                <span class="font-mono text-[9px] md:text-[10px] text-white/30 tracking-widest uppercase whitespace-nowrap">锦成 / 生姜 AI 实战营</span>
                             </div>
                         </div>
                         <div class="flex justify-between items-start mt-6">
                             <div>
                                 <h3 class="text-base md:text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">01 / AI 前沿实战装配</h3>
-                                <p class="text-xs md:text-sm text-brand-gray mt-2 leading-relaxed max-w-md">手把手部署先进 Agent 场景（NEWMAX AI、Claude Code、自动化流），用技术解放机械化劳动。</p>
+                                <p class="text-xs md:text-sm text-brand-gray mt-2 leading-relaxed max-w-md">手把手部署先进 Agent 场景（NEWMAX AI、Claude Code、自动化流）。用技术解放机械化劳动——在锦成、生姜 AI 实战营中一周跑通完整变现闭环。</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- 卡片 02: 综测学神心法（纯文字排版卡） -->
                     <div class="md:col-span-5 md:mt-24 flex flex-col group cursor-pointer">
-                        <div class="relative overflow-hidden aspect-[4/5] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-10 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                        <div class="relative overflow-hidden min-h-[560px] sm:aspect-[4/5] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-10 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
                             <!-- 顶栏 -->
                             <div class="flex justify-between items-start">
                                 <span class="font-mono text-[10px] md:text-xs text-brand-accent tracking-widest uppercase">✦ METHODOLOGY</span>
                                 <span class="font-mono text-[10px] text-white/40 tracking-widest">MATRIX</span>
                             </div>
 
-                            <!-- 主体：纵向排版，序号在上、主标在下 -->
-                            <div class="my-auto flex flex-col gap-6">
-                                <span class="stroke-text font-display font-extrabold text-[26vw] md:text-[11rem] leading-[0.8] select-none transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">02</span>
-                                <div class="flex flex-col gap-3">
-                                    <span class="font-mono text-[10px] md:text-xs text-white/40 tracking-[0.3em] uppercase">LEVERAGE MODEL</span>
-                                    <h3 class="font-serif text-2xl md:text-3xl text-white leading-tight">降维<br>加分体系</h3>
-                                    <div class="w-10 h-px bg-brand-accent/60 mt-1"></div>
+                            <!-- 主体：序号 + 主标 + 方法论说明 + 成绩数据 -->
+                            <div class="my-auto flex flex-col gap-5">
+                                <div class="flex items-end gap-4">
+                                    <span class="stroke-text font-display font-extrabold text-[20vw] md:text-[8rem] leading-[0.8] select-none transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">02</span>
+                                    <div class="flex flex-col gap-2 pb-2">
+                                        <span class="font-mono text-[10px] md:text-xs text-white/40 tracking-[0.3em] uppercase">LEVERAGE MODEL</span>
+                                        <h3 class="font-serif text-xl md:text-3xl text-white leading-tight">降维<br>加分体系</h3>
+                                        <div class="w-10 h-px bg-brand-accent/60 mt-1"></div>
+                                    </div>
+                                </div>
+
+                                <!-- 方法论说明：清晰规划获得综测最优解 -->
+                                <div class="border-t border-white/10 pt-4">
+                                    <p class="text-white/60 text-xs md:text-sm leading-relaxed">
+                                        研读官网综测评分表，逆向倒推每项加分投入产出比——把全部精力压在<span class="text-brand-accent font-bold">杠杆最大</span>的事件上，获得综测最优解。
+                                    </p>
+                                </div>
+
+                                <!-- 成绩数据条：真实排名 -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="border-l-2 border-brand-accent pl-3">
+                                        <div class="font-display font-extrabold text-brand-accent text-2xl md:text-3xl">No.1</div>
+                                        <div class="font-mono text-[9px] md:text-[10px] text-white/40 tracking-widest uppercase mt-1">综测全级第一</div>
+                                    </div>
+                                    <div class="border-l-2 border-white/20 pl-3">
+                                        <div class="font-display font-extrabold text-white text-2xl md:text-3xl">No.4</div>
+                                        <div class="font-mono text-[9px] md:text-[10px] text-white/40 tracking-widest uppercase mt-1">绩点全级排名</div>
+                                    </div>
+                                </div>
+
+                                <!-- 杠杆倍增可视化：紧凑版，1× → 10× -->
+                                <div class="border-t border-white/10 pt-4 flex items-center justify-between gap-3">
+                                    <div class="flex flex-col items-center gap-1">
+                                        <div class="flex items-end h-10">
+                                            <div class="w-2.5 bg-white/30 rounded-sm" style="height: 12%;"></div>
+                                        </div>
+                                        <span class="font-display font-extrabold text-white/50 text-sm">1×</span>
+                                    </div>
+                                    <span class="text-brand-accent text-lg">→</span>
+                                    <div class="flex flex-col items-center gap-1 flex-1">
+                                        <div class="flex items-end gap-0.5 h-10 w-full justify-center">
+                                            <div class="w-2 bg-brand-accent/40 rounded-sm" style="height: 30%;"></div>
+                                            <div class="w-2 bg-brand-accent/55 rounded-sm" style="height: 45%;"></div>
+                                            <div class="w-2 bg-brand-accent/70 rounded-sm" style="height: 60%;"></div>
+                                            <div class="w-2 bg-brand-accent/85 rounded-sm" style="height: 78%;"></div>
+                                            <div class="w-2 bg-brand-accent rounded-sm" style="height: 100%;"></div>
+                                        </div>
+                                        <span class="font-display font-extrabold text-brand-accent text-sm">10×</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- 底栏：用 1× → 10× 的纯文字对比表达杠杆，替代插画 -->
+                            <!-- 底栏：主标 -->
                             <div class="flex items-end justify-between">
-                                <div class="flex items-baseline gap-2">
-                                    <span class="font-mono text-xs text-white/40">1×</span>
-                                    <span class="text-brand-accent">→</span>
-                                    <span class="font-display font-extrabold text-2xl text-brand-accent">10×</span>
-                                </div>
+                                <span class="font-mono text-[9px] md:text-[10px] text-white/30 tracking-widest uppercase">精算师路径</span>
                                 <span class="font-display font-extrabold text-sm md:text-lg uppercase tracking-tight text-white">综测降维加分体系</span>
                             </div>
                         </div>
                         <div class="flex justify-between items-start mt-6">
                             <div>
                                 <h3 class="text-base md:text-xl font-display font-bold uppercase tracking-tight group-hover:text-brand-accent transition-colors duration-300">02 / 综测加分最速路径</h3>
-                                <p class="text-xs md:text-sm text-brand-gray mt-2 leading-relaxed">精算师逻辑：只做加分最有效、杠杆最大的事件。排除无效努力，实现效率最大化。</p>
+                                <p class="text-xs md:text-sm text-brand-gray mt-2 leading-relaxed">研读官网综测评分表，逆向倒推投入产出比，只做加分最有效的事件——最终综测全级第一、绩点第四。</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- 卡片 03: 竞赛经验全景（纯文字排版卡，保留四阶段信息） -->
                     <div class="md:col-span-12 mt-12 flex flex-col group cursor-pointer">
-                        <div class="relative overflow-hidden aspect-[16/9] md:aspect-[21/9] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-12 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
+                        <div class="relative overflow-hidden aspect-[4/5] sm:aspect-[16/10] md:aspect-[21/9] bg-neutral-900 border border-white/10 rounded-xl p-8 md:p-12 flex flex-col justify-between hover:border-brand-accent/50 transition-colors duration-500">
                             <!-- 顶栏 -->
                             <div class="flex justify-between items-start">
                                 <span class="font-mono text-[10px] md:text-xs text-brand-accent tracking-widest uppercase">✦ INITIATION</span>
@@ -405,18 +543,18 @@
                             </div>
 
                             <!-- 主体：左侧序号+主标，右侧四阶段列表 -->
-                            <div class="my-auto grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
+                            <div class="my-auto grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 items-center">
                                 <!-- 左：序号 + 主标 -->
-                                <div class="md:col-span-5 flex items-center gap-6">
-                                    <span class="stroke-text font-display font-extrabold text-[22vw] md:text-[9rem] leading-none select-none -ml-2 md:-ml-4 transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">03</span>
+                                <div class="md:col-span-5 flex items-center gap-5 md:gap-6">
+                                    <span class="stroke-text font-display font-extrabold text-[18vw] md:text-[9rem] leading-none select-none -ml-2 md:-ml-4 transition-colors duration-500 group-hover:[-webkit-text-stroke:1.5px_#C5A880]">03</span>
                                     <div class="flex flex-col gap-3">
                                         <span class="font-mono text-[10px] md:text-xs text-white/40 tracking-[0.3em] uppercase">PROVINCIAL LOOP</span>
                                         <h3 class="font-serif text-2xl md:text-4xl text-white leading-tight">大创<br>蓝图落地</h3>
                                         <div class="w-10 h-px bg-brand-accent/60 mt-1"></div>
                                     </div>
                                 </div>
-                                <!-- 右：四阶段（原流程节点的信息，改用文字纵向列表） -->
-                                <div class="md:col-span-7 grid grid-cols-2 gap-x-8 gap-y-5">
+                                <!-- 右：四阶段，窄屏单列堆叠，桌面端 2×2 -->
+                                <div class="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6 md:gap-y-7">
                                     <div class="flex items-baseline gap-3">
                                         <span class="font-mono text-[10px] text-white/30 tracking-widest">01</span>
                                         <div>
@@ -472,43 +610,29 @@
                 <div id="anchor-marquee" class="w-4 h-4 rounded-full border-2 border-brand-dark"></div>
             </div>
 
-            <!-- 轨道 1: 正向快速流动 -->
+            <!-- 轨道 1: 正向快速流动 —— 单句金句（短句，组窄循环快） -->
             <div class="marquee-track flex whitespace-nowrap items-center py-4" data-direction="-1">
-                <div class="marquee-group flex items-center gap-16 text-[10vw] font-display font-extrabold leading-none uppercase">
-                    <span>CO-LEARNING</span>
+                <div class="marquee-group flex items-center gap-6 md:gap-10 text-[9vw] md:text-[6vw] font-display font-extrabold leading-none">
+                    <span>先给价值，再说需求</span>
                     <span class="text-brand-accent font-serif font-light">✦</span>
-                    <span class="stroke-text">VALUE EXCHANGE</span>
-                    <span class="text-brand-accent font-serif font-light">✦</span>
-                    
-                    <span class="inline-flex items-center">
-                        F
-                        <span class="interactive-glyph w-[10vw] h-[10vw] mx-1 border border-brand-dark rounded-full inline-flex items-center justify-center relative bg-[#EAD5C3]/15">
-                            <svg class="glyph-arrow w-[5.5vw] h-[5.5vw] text-brand-dark transform origin-center transition-transform duration-100 ease-out" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>
-                            </svg>
-                        </span>
-                        LIO
+                    <span class="interactive-glyph w-[8vw] h-[8vw] md:w-[5vw] md:h-[5vw] border border-brand-dark rounded-full inline-flex items-center justify-center relative bg-[#EAD5C3]/15 shrink-0">
+                        <svg class="glyph-arrow w-[4.5vw] h-[4.5vw] md:w-[3vw] md:h-[3vw] text-brand-dark transform origin-center transition-transform duration-100 ease-out" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>
+                        </svg>
                     </span>
                     <span class="text-brand-accent font-serif font-light">✦</span>
                 </div>
             </div>
 
-            <!-- 轨道 2: 逆向交错流淌 -->
+            <!-- 轨道 2: 逆向交错流淌 —— 单句金句（长句，空心字） -->
             <div class="marquee-track flex whitespace-nowrap items-center py-4 border-t border-brand-dark/5" data-direction="1">
-                <div class="marquee-group flex items-center gap-16 text-[10vw] font-display font-extrabold leading-none uppercase">
-                    <span class="stroke-text">CLAUDE CODE</span>
+                <div class="marquee-group flex items-center gap-6 md:gap-10 text-[6.5vw] md:text-[4.5vw] font-display font-extrabold leading-none">
+                    <span class="stroke-text">体现未来的价值，而非此刻的平庸</span>
                     <span class="text-brand-accent font-serif font-light">✦</span>
-                    <span>BREAK BOUNDARIES</span>
-                    <span class="text-brand-accent font-serif font-light">✦</span>
-                    
-                    <span class="inline-flex items-center">
-                        C
-                        <span class="interactive-glyph w-[10vw] h-[10vw] mx-1 border border-brand-dark rounded-full inline-flex items-center justify-center relative bg-brand-dark/5">
-                            <svg class="glyph-arrow w-[5.5vw] h-[5.5vw] text-brand-accent transform origin-center transition-transform duration-100 ease-out" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>
-                            </svg>
-                        </span>
-                        NCEPT
+                    <span class="interactive-glyph w-[8vw] h-[8vw] md:w-[5vw] md:h-[5vw] border border-brand-dark rounded-full inline-flex items-center justify-center relative bg-brand-dark/5 shrink-0">
+                        <svg class="glyph-arrow w-[4.5vw] h-[4.5vw] md:w-[3vw] md:h-[3vw] text-brand-accent transform origin-center transition-transform duration-100 ease-out" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>
+                        </svg>
                     </span>
                     <span class="text-brand-accent font-serif font-light">✦</span>
                 </div>
@@ -619,10 +743,10 @@
             <div class="max-w-7xl mx-auto px-6 md:px-12">
                 
                 <div class="mb-20">
-                    <span class="text-xs tracking-widest text-brand-gray uppercase font-bold">LABS & EXPERIMENTS / 极简几何演练场</span>
-                    
+                    <span class="text-xs tracking-widest text-brand-gray uppercase font-bold">KNOWLEDGE VAULT / 个人知识沉淀 · 社群知识库</span>
+
                     <h2 class="text-[7.5vw] font-display font-black leading-[0.85] tracking-tight text-brand-dark uppercase">
-                        VISUAL<br>PL<span class="inline-block w-[6.8vw] h-[6.8vw] relative mx-1 align-middle select-none border border-brand-dark/15 rounded-full" id="playground-o-placeholder"></span>YGROUND
+                        KN<span class="inline-block w-[6.8vw] h-[6.8vw] relative mx-1 align-middle select-none border border-brand-dark/15 rounded-full" id="playground-o-placeholder"></span>WLEDGE<br>VAULT
                     </h2>
                 </div>
 
@@ -679,41 +803,27 @@
             </div>
         </section>
 
-        <section id="about" class="py-32 px-6 md:px-12 bg-brand-dark text-white relative">
-            
-            <div class="absolute top-[25%] left-8 md:left-16 w-8 h-8 pointer-events-none opacity-0">
-                <div id="anchor-about" class="w-full h-full rounded-full"></div>
-            </div>
+        <section id="about" class="py-32 px-6 md:px-12 bg-brand-dark text-white relative overflow-hidden">
 
-            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center relative z-10">
                 <div class="lg:col-span-8">
                     <span class="text-xs tracking-widest text-brand-accent uppercase font-bold">№02 / ACADEMIC RECORD & ETHOS / 极致能效背书</span>
                     
-                    <div class="mt-8 mb-12 flex flex-col md:flex-row gap-8 items-start md:items-center">
-                        <!-- 艺术高对比黑白肖像容器 -->
-                        <div class="w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden bg-zinc-800 border border-white/15 shrink-0 shadow-2xl">
-                            <img src="ai_portfolio_portrait.jpg" 
-                                 class="w-full h-full object-cover filter grayscale contrast-125 brightness-90 hover:grayscale-0 hover:scale-105 transition-all duration-700 ease-out" 
-                                 alt="化我肖像"
-                                 onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=500&q=80'">
-                        </div>
-
-                        <div>
-                            <h3 id="ethos-text" class="text-3xl md:text-5xl font-display font-bold uppercase leading-tight text-brand-bg">
-                                一个热爱 AI 的大学生，<br>
-                                正和先行者一起在 OPC 破界前行。
-                            </h3>
-                            <p class="text-lg text-brand-gray mt-6 font-light">
-                                不依靠任何无意义的内卷，只打算靠自己的极致执行力与技术杠杆，在大学期间实现真正的经济独立。
-                            </p>
-                        </div>
+                    <div class="mt-8 mb-12">
+                        <h3 id="ethos-text" class="text-3xl md:text-5xl font-display font-bold uppercase leading-tight text-brand-bg">
+                            赚钱是人生最大的修行。<br>
+                            赚不到钱的成长，都是伪成长<span class="relative inline-block w-[0.5em] h-[0.5em] align-middle mx-1"><span id="anchor-about" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6"></span></span>
+                        </h3>
+                        <p class="text-lg text-brand-gray mt-6 font-light max-w-2xl">
+                            一起成长，赚钱。
+                        </p>
                     </div>
                 </div>
 
                 <div class="lg:col-span-4 flex flex-col gap-8 border-l border-white/10 pl-8">
                     <div>
                         <h4 class="text-lg font-bold text-brand-accent">26 届浪尖领航官</h4>
-                        <p class="text-sm text-brand-gray mt-2">破界前行，担任前沿青年成长领袖及硬核 AI 技术的推广使使者。</p>
+                        <p class="text-sm text-brand-gray mt-2">破界前行，担任前沿青年成长领袖及硬核 AI 技术的推广使者。</p>
                     </div>
                     <div>
                         <h4 class="text-lg font-bold text-brand-accent">大创省级立项负责人</h4>
@@ -728,11 +838,6 @@
         </section>
 
         <section id="welfare" class="py-32 px-6 md:px-12 bg-brand-bg text-brand-dark border-b border-brand-dark/10 relative overflow-hidden">
-            
-            <!-- 福利场景特有磁性吸附靶点 -->
-            <div class="absolute top-[30%] right-8 md:right-24 w-8 h-8 pointer-events-none opacity-0">
-                <div id="anchor-welfare" class="w-full h-full rounded-full"></div>
-            </div>
 
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 
@@ -744,7 +849,7 @@
                     
                     <h2 class="text-3xl md:text-5xl font-display font-black leading-tight uppercase mb-8">
                         GROWTH ENGINE <br>
-                        <span class="text-brand-accent">✦ 破圈资料免费领</span>
+                        <span class="text-brand-accent"><span class="relative inline-block w-[0.6em] h-[0.6em] align-middle mr-2"><span id="anchor-welfare" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6"></span></span>破圈资料免费领</span>
                     </h2>
                     
                     <p class="text-base md:text-lg text-brand-gray font-light leading-relaxed mb-6">
@@ -796,7 +901,7 @@
                  style="height: 100dvh;">
             <style>
                 @media (pointer: coarse), (max-width: 767px) {
-                    #contact-wrapper { height: 140vh !important; }
+                    #contact-wrapper { height: 120vh !important; }
                 }
             </style>
             
@@ -1032,7 +1137,7 @@
             } else if (isMobile) {
                 enableTilt();
             }
-            lenis.scrollTo('#hero-section');
+            lenis.scrollTo('#ethos-anchor');
         };
 
         window.addEventListener('touchend', () => {
@@ -1044,6 +1149,53 @@
         // GSAP ScrollTrigger 桥接绑定
         gsap.registerPlugin(ScrollTrigger);
         lenis.on('scroll', ScrollTrigger.update);
+
+        // 心法锚点屏：进入视口触发淡入（一次性，IntersectionObserver，无每帧开销）
+        const ethosAnchor = document.getElementById('ethos-anchor');
+        if (ethosAnchor) {
+            const ethosObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        ethosAnchor.classList.add('is-visible');
+                        ethosObserver.unobserve(ethosAnchor); // 只触发一次
+                    }
+                });
+            }, { threshold: 0.2 });
+            ethosObserver.observe(ethosAnchor);
+        }
+
+        // 导航栏：向下滚动时隐藏，停止滚动或向上滚时浮现。
+        // 顶部 80px 内始终显示。解决窄屏导航滚动时挤在一起的问题。
+        const autoHideHeader = document.getElementById('global-header');
+        let lastScrollY = 0;
+        let hideTimer = null;
+        let headerHidden = false;
+        function showHeader() {
+            if (!headerHidden) return;
+            headerHidden = false;
+            autoHideHeader.style.transform = 'translateY(0)';
+        }
+        function hideHeader() {
+            if (headerHidden) return;
+            headerHidden = true;
+            autoHideHeader.style.transform = 'translateY(-110%)';
+        }
+        lenis.on('scroll', ({ scroll, direction, velocity }) => {
+            const y = scroll || window.scrollY;
+            // 顶部区域强制显示
+            if (y < 80) { showHeader(); lastScrollY = y; return; }
+            // 向下滚动且速度明显 → 隐藏
+            if (y > lastScrollY + 6) {
+                hideHeader();
+            } else if (y < lastScrollY - 2) {
+                // 向上滚 → 立即浮现
+                showHeader();
+            }
+            lastScrollY = y;
+            // 停止滚动 600ms 后也浮现（"不动时出现"）
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(showHeader, 600);
+        });
 
         // 场景 1: 引力星尘 Canvas 引擎代码实现
         const canvas = document.getElementById('opener-canvas');
@@ -1120,20 +1272,26 @@
         animateStars();
 
         // 交互 Hub 的视差跟随逻辑（读统一指针：鼠标 / 触摸 / 重力）
+        // 性能优化：缓存 getBoundingClientRect（仅滚动时刷新），用 gsap.set 而非每帧 gsap.to，
+        // 避免 layout 抖动与 tween 堆积。
         const hub = document.getElementById('interaction-hub');
+        let hubRect = hub ? hub.getBoundingClientRect() : null;
+        let hubInView = true;
+        function refreshHubRect() { if (hub) hubRect = hub.getBoundingClientRect(); }
+        window.addEventListener('scroll', refreshHubRect, { passive: true });
+        window.addEventListener('resize', refreshHubRect);
+        // 平滑跟随的当前值（自己插值，替代 gsap.to 的持续 tween）
+        let hubCurX = 0, hubCurY = 0;
         gsap.ticker.add(() => {
-            if (!hub) return;
-            const rect = hub.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            const deltaX = (unifiedPointer.x - centerX) * 0.05;
-            const deltaY = (unifiedPointer.y - centerY) * 0.05;
-            gsap.to(hub, {
-                x: deltaX,
-                y: deltaY,
-                duration: 0.6,
-                ease: "power2.out"
-            });
+            if (!hub || !hubRect || !hubInView) return;
+            const centerX = hubRect.left + hubRect.width / 2;
+            const centerY = hubRect.top + hubRect.height / 2;
+            const targetX = (unifiedPointer.x - centerX) * 0.05;
+            const targetY = (unifiedPointer.y - centerY) * 0.05;
+            // 自插值平滑（0.15 系数 ≈ 原 0.6s ease 的手感），无 tween 堆积
+            hubCurX += (targetX - hubCurX) * 0.15;
+            hubCurY += (targetY - hubCurY) * 0.15;
+            gsap.set(hub, { x: hubCurX, y: hubCurY });
         });
 
         // 场景 1: 滚出开屏的视差收起
@@ -1217,12 +1375,12 @@
             const loop = gsap.to(groups, {
                 xPercent: `+=${dir * 100}`,
                 repeat: -1,
-                duration: 20,
+                duration: 8,
                 ease: "none",
                 modifiers: {
                     xPercent: gsap.utils.unitize((x) => {
                         const val = parseFloat(x);
-                        return val < -100 ? val + 300 : val > 200 ? val - 300 : val;
+                        return val < -100 ? val + 400 : val > 300 ? val - 400 : val;
                     })
                 }
             });
@@ -1255,30 +1413,35 @@
         });
 
         // 动态计算高定互动字符中的箭头跟随角度（统一指针：鼠标 / 触摸 / 重力）
-        // 改用 ticker 驱动，因为重力是连续更新、没有离散事件。
+        // 性能优化：跑马灯离开视口时跳过；缓存 rect（滚动时刷新）；用 gsap.set 替代每帧 gsap.to。
         const interactiveGlyphs = document.querySelectorAll('.interactive-glyph');
         let lastGlyphAngle = -90;
+        let glyphRect = interactiveGlyphs.length ? interactiveGlyphs[0].getBoundingClientRect() : null;
+        let marqueeInView = true;
+        function refreshGlyphRect() {
+            if (interactiveGlyphs.length) glyphRect = interactiveGlyphs[0].getBoundingClientRect();
+        }
+        window.addEventListener('scroll', refreshGlyphRect, { passive: true });
+        window.addEventListener('resize', refreshGlyphRect);
+        // 视口剔除：跑马灯滚出屏幕就不算了
+        const marqueeSection = document.getElementById('kinetic-marquee');
+        if (marqueeSection) {
+            new IntersectionObserver(entries => {
+                marqueeInView = entries[0].isIntersecting;
+            }, { rootMargin: '100px' }).observe(marqueeSection);
+        }
         gsap.ticker.add(() => {
-            if (!interactiveGlyphs || interactiveGlyphs.length === 0) return;
-            // 取第一个 glyph 作基准角，避免每个箭头各自旋转造成视觉混乱
-            const firstRect = interactiveGlyphs[0].getBoundingClientRect();
-            const glyphX = firstRect.left + firstRect.width / 2;
-            const glyphY = firstRect.top + firstRect.height / 2;
+            if (!interactiveGlyphs || interactiveGlyphs.length === 0 || !glyphRect || !marqueeInView) return;
+            const glyphX = glyphRect.left + glyphRect.width / 2;
+            const glyphY = glyphRect.top + glyphRect.height / 2;
             const angle = Math.atan2(unifiedPointer.y - glyphY, unifiedPointer.x - glyphX);
             const angleDegrees = angle * (180 / Math.PI) - 90;
-            // 角度变化超过阈值才更新，减少不必要的 tween
+            // 角度变化超过阈值才更新
             if (Math.abs(angleDegrees - lastGlyphAngle) > 0.5) {
                 lastGlyphAngle = angleDegrees;
                 interactiveGlyphs.forEach(glyph => {
                     const arrow = glyph.querySelector('.glyph-arrow');
-                    if (arrow) {
-                        gsap.to(arrow, {
-                            rotation: angleDegrees,
-                            duration: 0.4,
-                            ease: "power2.out",
-                            overwrite: 'auto'
-                        });
-                    }
+                    if (arrow) gsap.set(arrow, { rotation: angleDegrees });
                 });
             }
         });
@@ -1298,50 +1461,78 @@
             velocityStretch = velocity;
         });
 
-        function renderGazeCircle() {
-            const viewportW = window.innerWidth;
+        // gaze 圆环：section 配置移到函数外（避免每帧重建数组），
+        // 当前激活的 section + 其锚点位置在滚动时缓存，rAF 只读缓存值做插值，不再每帧 getBoundingClientRect。
+        const gazeSections = [
+            { id: 'interactive-opener', anchor: 'anchor-hero', color: '#F5F4F0', defaultSize: 24 },
+            { id: 'ethos-anchor', anchor: 'anchor-ethos', color: '#C5A880', defaultSize: 18 },
+            { id: 'hero-section', anchor: 'anchor-hero-sec', color: '#0E0E0E', defaultSize: 14 },
+            { id: 'projects', anchor: 'anchor-projects', color: '#C5A880', defaultSize: 16 },
+            { id: 'kinetic-marquee', anchor: 'anchor-marquee', color: '#C5A880', defaultSize: 18 },
+            { id: 'brands', anchor: 'anchor-brands', color: '#0E0E0E', defaultSize: 16 },
+            { id: 'playground', anchor: 'playground-o-placeholder', color: '#0E0E0E', defaultSize: 76 },
+            { id: 'about', anchor: 'anchor-about', color: '#C5A880', defaultSize: 14 },
+            { id: 'welfare', anchor: 'anchor-welfare', color: '#C5A880', defaultSize: 18 },
+            { id: 'contact-wrapper', anchor: 'anchor-portal-start', color: '#0E0E0E', defaultSize: 24 }
+        ];
+        // 缓存：滚动时更新一次，rAF 直接读
+        let gazeCache = {
+            section: gazeSections[0],
+            anchorX: window.innerWidth / 2,
+            anchorY: window.innerHeight / 2,
+            anchorW: gazeSections[0].defaultSize,
+            anchorH: gazeSections[0].defaultSize
+        };
+        function refreshGazeCache() {
             const viewportH = window.innerHeight;
-
-            const sections = [
-                { id: 'interactive-opener', anchor: 'anchor-hero', color: '#F5F4F0', defaultSize: 24 },
-                { id: 'hero-section', anchor: 'anchor-hero-sec', color: '#0E0E0E', defaultSize: 14 },
-                { id: 'projects', anchor: 'anchor-projects', color: '#C5A880', defaultSize: 16 },
-                { id: 'kinetic-marquee', anchor: 'anchor-marquee', color: '#C5A880', defaultSize: 18 },
-                { id: 'brands', anchor: 'anchor-brands', color: '#0E0E0E', defaultSize: 16 },
-                { id: 'playground', anchor: 'playground-o-placeholder', color: '#0E0E0E', defaultSize: 76 },
-                { id: 'about', anchor: 'anchor-about', color: '#F5F4F0', defaultSize: 16 },
-                { id: 'welfare', anchor: 'anchor-welfare', color: '#C5A880', defaultSize: 22 }, 
-                { id: 'contact-wrapper', anchor: 'anchor-portal-start', color: '#0E0E0E', defaultSize: 24 }
-            ];
-
-            let activeSection = sections[0];
-            for (const sec of sections) {
+            let active = gazeSections[0];
+            for (const sec of gazeSections) {
                 const el = document.getElementById(sec.id);
                 if (!el) continue;
                 const rect = el.getBoundingClientRect();
                 if (rect.top <= viewportH / 2 && rect.bottom >= viewportH / 2) {
-                    activeSection = sec;
+                    active = sec;
                     break;
                 }
             }
-
-            let targetXVal = viewportW / 2;
-            let targetYVal = viewportH / 2;
-            let targetWidthVal = activeSection.defaultSize;
-            let targetHeightVal = activeSection.defaultSize;
-            targetColor = activeSection.color;
-
-            const activeAnchor = document.getElementById(activeSection.anchor);
-            if (activeAnchor) {
-                const rect = activeAnchor.getBoundingClientRect();
-                targetXVal = rect.left + rect.width / 2;
-                targetYVal = rect.top + rect.height / 2;
-
-                if (activeSection.anchor === 'playground-o-placeholder') {
-                    targetWidthVal = rect.width;
-                    targetHeightVal = rect.height;
+            const anchorEl = document.getElementById(active.anchor);
+            let ax = window.innerWidth / 2, ay = window.innerHeight / 2;
+            let aw = active.defaultSize, ah = active.defaultSize;
+            if (anchorEl) {
+                const r = anchorEl.getBoundingClientRect();
+                ax = r.left + r.width / 2;
+                ay = r.top + r.height / 2;
+                if (active.anchor === 'playground-o-placeholder') {
+                    aw = r.width;
+                    ah = r.height;
                 }
             }
+            gazeCache.section = active;
+            gazeCache.anchorX = ax;
+            gazeCache.anchorY = ay;
+            gazeCache.anchorW = aw;
+            gazeCache.anchorH = ah;
+        }
+        // 滚动时刷新缓存（被动监听，便宜）；也用 rAF 节流避免滚动风暴
+        let gazeRefreshQueued = false;
+        window.addEventListener('scroll', () => {
+            if (gazeRefreshQueued) return;
+            gazeRefreshQueued = true;
+            requestAnimationFrame(() => { refreshGazeCache(); gazeRefreshQueued = false; });
+        }, { passive: true });
+        window.addEventListener('resize', refreshGazeCache);
+        refreshGazeCache();
+
+        function renderGazeCircle() {
+            const viewportW = window.innerWidth;
+            const viewportH = window.innerHeight;
+
+            const activeSection = gazeCache.section;
+            let targetXVal = gazeCache.anchorX;
+            let targetYVal = gazeCache.anchorY;
+            let targetWidthVal = gazeCache.anchorW;
+            let targetHeightVal = gazeCache.anchorH;
+            targetColor = activeSection.color;
 
             // 读取转场进度：优先用 timeline 的 scrollTrigger progress（pin/非 pin 都适用）
             const portalST = portalTl && portalTl.scrollTrigger ? portalTl.scrollTrigger : null;
@@ -1628,10 +1819,24 @@
             const rect = container.getBoundingClientRect();
             const w = window.innerWidth;
             const h = window.innerHeight;
+            const stickerMobile = w < 768;
 
             stickerStates.forEach((state, index) => {
-                state.x = (w * 0.15) + (Math.random() * (w * 0.6)) - (state.width / 2);
-                state.y = (h * 0.35) + (Math.random() * (h * 0.4)) - (state.height / 2);
+                // 移动端：贴纸缩小后重新读取实际尺寸
+                if (stickerMobile) {
+                    const r = state.element.getBoundingClientRect();
+                    state.width = r.width || 80;
+                    state.height = r.height || 48;
+                }
+                // 贴纸散布在页面下半部分（靠近金句和底部），避开顶部主文案
+                // 桌面端：横向 15%~75%，纵向 55%~85%
+                // 移动端：横向 5%~75%，纵向 60%~88%（更靠下，避开主文案）
+                const xMin = stickerMobile ? w * 0.05 : w * 0.15;
+                const xRange = stickerMobile ? w * 0.7 : w * 0.6;
+                const yMin = stickerMobile ? h * 0.60 : h * 0.55;
+                const yRange = stickerMobile ? h * 0.28 : h * 0.30;
+                state.x = xMin + (Math.random() * xRange) - (state.width / 2);
+                state.y = yMin + (Math.random() * yRange) - (state.height / 2);
                 state.vx = 0;
                 state.vy = 0;
                 state.vr = 0;
